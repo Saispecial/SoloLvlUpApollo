@@ -159,7 +159,7 @@ export const useTourStore = create<TourStore>()(
       resetTour: () => {
         set({ isTourActive: false, currentStepIndex: 0, showNewUserPopup: false, hasSeenTour: false })
       },
-    }},
+    },
     {
       name: "tour-store",
       storage: createJSONStorage(() => safeLocalStorage),

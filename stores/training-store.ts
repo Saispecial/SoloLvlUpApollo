@@ -921,7 +921,7 @@ export const useTrainingStore = create<TrainingState>()(
       getTaskCompletion: (taskId: string) => {
         return get().completedTasks.find(t => t.taskId === taskId)
       }
-    }},
+    },
     {
       name: "training-progress",
       storage: createJSONStorage(() => safeLocalStorage),
