@@ -5,6 +5,19 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: [],
+    remotePatterns: []
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons']
+  },
+  // Vercel deployment optimizations
+  output: 'standalone',
+  poweredByHeader: false,
+  compress: true,
+  // Environment variables for build
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
 }
 
