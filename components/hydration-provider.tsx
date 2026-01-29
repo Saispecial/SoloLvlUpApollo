@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, ReactNode } from "react"
-import { useNurseStore } from "@/stores/nurse-store"
+import { useAppStore } from "@/stores/app-store"
 
 interface HydrationProviderProps {
   children: ReactNode
@@ -21,7 +21,7 @@ export function HydrationProvider({ children }: HydrationProviderProps) {
       try {
         // Check if data exists in localStorage first
         if (typeof window !== "undefined") {
-          const storedData = localStorage.getItem("nurse-store")
+          const storedData = localStorage.getItem("ei-nurse-app-storage")
           
           if (storedData) {
             try {
@@ -35,7 +35,7 @@ export function HydrationProvider({ children }: HydrationProviderProps) {
             } catch (parseError) {
               console.error("[HydrationProvider] Failed to parse localStorage data:", parseError)
               // Clear corrupted data
-              localStorage.removeItem("nurse-store")
+              localStorage.removeItem("ei-nurse-app-storage")
             }
           } else {
             console.log("[HydrationProvider] No persisted data found in localStorage - store will use defaults")
@@ -43,8 +43,8 @@ export function HydrationProvider({ children }: HydrationProviderProps) {
         }
 
         // Explicitly trigger Zustand's rehydration
-        if (useNurseStore.persist?.rehydrate) {
-          await useNurseStore.persist.rehydrate()
+        if (useAppStore.persist?.rehydrate) {
+          await useAppStore.persist.rehydrate()
           console.log("[HydrationProvider] Zustand rehydration triggered")
         }
 
@@ -52,7 +52,7 @@ export function HydrationProvider({ children }: HydrationProviderProps) {
         await new Promise((resolve) => setTimeout(resolve, 50))
 
         // Verify store state after hydration
-        const state = useNurseStore.getState()
+        const state = useAppStore.getState()
         console.log("[HydrationProvider] Store state after hydration:", {
           modules: state.trainingModules?.length || 0,
           completed: state.completedModules?.length || 0,

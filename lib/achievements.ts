@@ -1,4 +1,4 @@
-import type { Achievement, PlayerProfile, Quest } from "./types"
+import type { Achievement, NurseProfile, Quest } from "./types"
 
 export const ACHIEVEMENTS: Achievement[] = [
   {
@@ -15,7 +15,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Reach level 5 - Developing competence",
     icon: "⭐",
     unlocked: false,
-    requirement: { type: "level", value: 5 },
+    requirement: { type: "competency_level", value: 5 },
   },
   {
     id: "level_10",
@@ -23,7 +23,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Reach level 10 - Competent rank achieved",
     icon: "🌟",
     unlocked: false,
-    requirement: { type: "level", value: 10 },
+    requirement: { type: "competency_level", value: 10 },
   },
   {
     id: "streak_7",
@@ -31,7 +31,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Maintain a 7-day learning streak",
     icon: "🔥",
     unlocked: false,
-    requirement: { type: "streak", value: 7 },
+    requirement: { type: "learning_streak", value: 7 },
   },
   {
     id: "streak_30",
@@ -39,7 +39,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Maintain a 30-day learning streak",
     icon: "💎",
     unlocked: false,
-    requirement: { type: "streak", value: 30 },
+    requirement: { type: "learning_streak", value: 30 },
   },
   {
     id: "module_master",
@@ -55,7 +55,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Reach 50 in Self-Awareness",
     icon: "🧠",
     unlocked: false,
-    requirement: { type: "ei_threshold", value: 50, stat: "Self-Awareness" },
+    requirement: { type: "ei_threshold", value: 50, competency: "Self-Awareness" },
   },
   {
     id: "resilience_master",
@@ -63,15 +63,15 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Reach 50 in Resilience",
     icon: "💪",
     unlocked: false,
-    requirement: { type: "ei_threshold", value: 50, stat: "Resilience" },
+    requirement: { type: "ei_threshold", value: 50, competency: "Resilience" },
   },
   {
     id: "xp_1000",
     title: "Knowledge Collector",
-    description: "Earn 1000 total XP",
+    description: "Earn 1000 total EI points",
     icon: "⚡",
     unlocked: false,
-    requirement: { type: "total_xp", value: 1000 },
+    requirement: { type: "total_ei_points", value: 1000 },
   },
   {
     id: "reflection_streak_7",
@@ -103,7 +103,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Complete 25 Self-Awareness modules",
     icon: "🧠",
     unlocked: false,
-    requirement: { type: "domain_expert", value: 25, realm: "Self-Awareness & Recognition" },
+    requirement: { type: "domain_expert", value: 25, domain: "Self-Awareness & Recognition" },
   },
   {
     id: "domain_expert_regulation",
@@ -111,7 +111,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Complete 25 Emotional Regulation modules",
     icon: "💖",
     unlocked: false,
-    requirement: { type: "domain_expert", value: 25, realm: "Emotional Regulation" },
+    requirement: { type: "domain_expert", value: 25, domain: "Emotional Regulation" },
   },
   {
     id: "domain_expert_empathy",
@@ -119,7 +119,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Complete 25 Empathy & Patient Care modules",
     icon: "❤️",
     unlocked: false,
-    requirement: { type: "domain_expert", value: 25, realm: "Empathy & Patient Care" },
+    requirement: { type: "domain_expert", value: 25, domain: "Empathy & Patient Care" },
   },
   {
     id: "domain_expert_communication",
@@ -127,7 +127,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Complete 25 Team Communication modules",
     icon: "💬",
     unlocked: false,
-    requirement: { type: "domain_expert", value: 25, realm: "Team Communication" },
+    requirement: { type: "domain_expert", value: 25, domain: "Team Communication" },
   },
   {
     id: "domain_expert_stress",
@@ -135,7 +135,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Complete 25 Stress Management modules",
     icon: "🌊",
     unlocked: false,
-    requirement: { type: "domain_expert", value: 25, realm: "Stress Management" },
+    requirement: { type: "domain_expert", value: 25, domain: "Stress Management" },
   },
   {
     id: "consistent_learner",
@@ -151,15 +151,15 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Reach 75 in Social Awareness - exceptional patient empathy",
     icon: "💝",
     unlocked: false,
-    requirement: { type: "ei_threshold", value: 75, stat: "Social Awareness" },
+    requirement: { type: "ei_threshold", value: 75, competency: "Social Awareness" },
   },
   {
     id: "xp_5000",
     title: "Knowledge Legend",
-    description: "Earn 5000 total XP",
+    description: "Earn 5000 total EI points",
     icon: "🏆",
     unlocked: false,
-    requirement: { type: "total_xp", value: 5000 },
+    requirement: { type: "total_ei_points", value: 5000 },
   },
   {
     id: "level_25",
@@ -167,7 +167,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Reach level 25 - Advanced rank",
     icon: "🔱",
     unlocked: false,
-    requirement: { type: "level", value: 25 },
+    requirement: { type: "competency_level", value: 25 },
   },
   {
     id: "level_50",
@@ -175,12 +175,12 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Reach level 50 - Master rank achieved",
     icon: "⚜️",
     unlocked: false,
-    requirement: { type: "level", value: 50 },
+    requirement: { type: "competency_level", value: 50 },
   },
 ]
 
 export function checkAchievements(
-  player: PlayerProfile,
+  player: NurseProfile,
   completedQuests: Quest[],
   achievements: Achievement[],
   reflections: any[] = [],
@@ -192,23 +192,29 @@ export function checkAchievements(
     let shouldUnlock = false
     const req = achievement.requirement
 
+    // Support both new and legacy field names
+    const level = player.competencyLevel ?? player.level ?? 1
+    const streak = player.learningStreak ?? player.streak ?? 0
+    const totalPoints = player.totalEIPoints ?? player.totalXp ?? 0
+    const competencies = player.competencies ?? player.stats
+
     switch (req.type) {
-      case "level":
-        shouldUnlock = player.level >= req.value
+      case "competency_level":
+        shouldUnlock = level >= req.value
         break
       case "modules_completed":
         shouldUnlock = completedQuests.length >= req.value
         break
-      case "streak":
-        shouldUnlock = player.streak >= req.value
+      case "learning_streak":
+        shouldUnlock = streak >= req.value
         break
       case "ei_threshold":
-        if (req.stat) {
-          shouldUnlock = player.stats[req.stat] >= req.value
+        if (req.competency && competencies) {
+          shouldUnlock = (competencies[req.competency] ?? 0) >= req.value
         }
         break
-      case "total_xp":
-        shouldUnlock = player.totalXp >= req.value
+      case "total_ei_points":
+        shouldUnlock = totalPoints >= req.value
         break
       case "reflection_streak":
         shouldUnlock = checkReflectionStreak(reflections, req.value)
@@ -217,8 +223,8 @@ export function checkAchievements(
         shouldUnlock = checkPerfectWeek(completedQuests, req.value)
         break
       case "domain_expert":
-        if (req.realm) {
-          shouldUnlock = completedQuests.filter((q) => q.realm === req.realm).length >= req.value
+        if (req.domain) {
+          shouldUnlock = completedQuests.filter((q) => (q.eiDomain ?? q.realm) === req.domain).length >= req.value
         }
         break
       case "consistent_learner":

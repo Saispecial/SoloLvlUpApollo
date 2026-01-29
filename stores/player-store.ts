@@ -1,7 +1,35 @@
 "use client"
 
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { createJSONStorage, persist, StateStorage } from "zustand/middleware"
+
+// Safe localStorage wrapper that handles SSR
+const safeLocalStorage: StateStorage = {
+  getItem: (name: string): string | null => {
+    if (typeof window === "undefined") return null
+    try {
+      return localStorage.getItem(name)
+    } catch {
+      return null
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    if (typeof window === "undefined") return
+    try {
+      localStorage.setItem(name, value)
+    } catch {
+      // Silently fail
+    }
+  },
+  removeItem: (name: string): void => {
+    if (typeof window === "undefined") return
+    try {
+      localStorage.removeItem(name)
+    } catch {
+      // Silently fail
+    }
+  },
+}
 import type {
   PlayerProfile,
   Quest,
@@ -540,7 +568,7 @@ export const usePlayerStore = create<PlayerStore>()(
     {
       name: "player-store",
       version: 1,
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => safeLocalStorage),
       onRehydrateStorage: () => {
         console.log("[PlayerStore] Starting hydration from localStorage...")
         return (state, error) => {

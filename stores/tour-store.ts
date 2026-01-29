@@ -1,7 +1,35 @@
 "use client"
 
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { createJSONStorage, persist, StateStorage } from "zustand/middleware"
+
+// Safe localStorage wrapper that handles SSR
+const safeLocalStorage: StateStorage = {
+  getItem: (name: string): string | null => {
+    if (typeof window === 'undefined') return null
+    try {
+      return localStorage.getItem(name)
+    } catch {
+      return null
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(name, value)
+    } catch {
+      // Ignore storage errors
+    }
+  },
+  removeItem: (name: string): void => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.removeItem(name)
+    } catch {
+      // Ignore storage errors
+    }
+  },
+}
 
 export type TourStep = {
   id: string
@@ -130,7 +158,7 @@ export const useTourStore = create<TourStore>()(
     }),
     {
       name: "tour-store",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => safeLocalStorage),
     }
   )
 )

@@ -1,7 +1,35 @@
 "use client"
 
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { createJSONStorage, persist, StateStorage } from "zustand/middleware"
+
+// Safe localStorage wrapper that handles SSR
+const safeLocalStorage: StateStorage = {
+  getItem: (name: string): string | null => {
+    if (typeof window === 'undefined') return null
+    try {
+      return localStorage.getItem(name)
+    } catch {
+      return null
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(name, value)
+    } catch {
+      // Ignore storage errors
+    }
+  },
+  removeItem: (name: string): void => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.removeItem(name)
+    } catch {
+      // Ignore storage errors
+    }
+  },
+}
 import type {
   NurseProfile,
   TrainingModule,
@@ -895,7 +923,7 @@ export const useNurseStore = create<NurseStore>()(
     {
       name: "nurse-store", // Changed from "player-store"
       version: 1,
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => safeLocalStorage),
       // Migration function to handle legacy data
       migrate: (persistedState: any, version: number) => {
         console.log("[NurseStore] Migrating persisted state, version:", version)

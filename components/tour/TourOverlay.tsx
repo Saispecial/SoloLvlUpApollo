@@ -9,6 +9,7 @@ import Enhanced3DNurseScene from "@/components/counseling/Enhanced3DNurseScene"
 import { ChevronRight, X } from "lucide-react"
 
 export function TourOverlay() {
+  const [isMounted, setIsMounted] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const {
@@ -21,6 +22,11 @@ export function TourOverlay() {
     setShowNewUserPopup,
     setHasSeenTour,
   } = useTourStore()
+  
+  // Ensure component is mounted before rendering to prevent SSR issues
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const currentStep = TOUR_STEPS[currentStepIndex]
   const [isTalking, setIsTalking] = useState(false)
@@ -91,6 +97,11 @@ export function TourOverlay() {
       setIsTalking(true)
     }
   }, [isTourActive, currentStepIndex, currentStep, router, pathname])
+
+  // Don't render anything until mounted to avoid SSR issues
+  if (!isMounted) {
+    return null
+  }
 
   // New User Popup
   if (showNewUserPopup) {

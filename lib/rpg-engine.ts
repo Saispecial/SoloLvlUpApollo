@@ -20,7 +20,7 @@ export function calculateCurrentLevelXp(totalXp: number, currentLevel: number): 
 export function checkLevelUp(
   currentXp: number,
   level: number,
-): { didLevelUp: boolean; newLevel: number; newRank: string } {
+): { didLevelUp: boolean; levelUp: boolean; newLevel: number; newRank: string } {
   let newLevel = level
   let totalXpNeeded = 0
 
@@ -37,7 +37,7 @@ export function checkLevelUp(
   const didLevelUp = newLevel > level
   const newRank = calculateRank(newLevel)
 
-  return { didLevelUp, newLevel, newRank }
+  return { didLevelUp, levelUp: didLevelUp, newLevel, newRank }
 }
 
 export function calculateRank(level: number): string {

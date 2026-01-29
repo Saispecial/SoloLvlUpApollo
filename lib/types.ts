@@ -10,6 +10,7 @@ export interface EICompetencies {
 
 // Legacy alias for backward compatibility during migration
 export type PlayerStats = EICompetencies
+export type NurseStats = EICompetencies
 
 // Nurse Profile (formerly PlayerProfile)
 export interface NurseProfile {
@@ -18,16 +19,20 @@ export interface NurseProfile {
   eiDevelopmentPoints: number // formerly xp
   totalEIPoints: number // formerly totalXp
   competencies: EICompetencies // formerly stats
-  nextLevelPoints: number // formerly nextLevelXp
+  nextLevelPoints?: number // formerly nextLevelXp
   learningStreak: number // formerly streak
   skillPoints: number
   customAttributes: Record<string, number>
   name: string
   theme: Theme
   role: "Nurse" | "Manager" | "Educator"
+  department?: string
+  lastStreakDate?: string
+  statBreakthroughs?: Record<string, any>
+  enrolledPrograms?: string[]
   
   // Program Context (NEW)
-  activeProgramId?: string
+  activeProgramId?: string | null
   programStartDate?: Date
   currentWeek?: number
   
@@ -146,19 +151,22 @@ export interface ProfessionalMilestone {
 export type Achievement = ProfessionalMilestone
 
 export interface PersonalReflection {
+  id?: string
+  content?: string
   mood: string
-  emotionalState: string
-  currentChallenges: string
+  emotionalState?: string
+  currentChallenges?: string
   motivationLevel: string
   timestamp: Date
   diaryContent?: string
-  source: "manual" | "diary"
+  source?: "manual" | "diary"
 }
 
 export interface DiaryEntry {
   id: string
   content: string
   timestamp: Date
+  converted?: boolean
   convertedToReflection?: boolean
   reflectionId?: string
 }
