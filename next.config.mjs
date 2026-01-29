@@ -9,10 +9,7 @@ const nextConfig = {
     remotePatterns: []
   },
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-    turbo: {
-      root: '.'
-    }
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons']
   },
   // Vercel deployment optimizations
   poweredByHeader: false,
