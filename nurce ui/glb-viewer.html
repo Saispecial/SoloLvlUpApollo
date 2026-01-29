@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLB Animation Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+        
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            max-width: 300px;
+        }
+        
+        #fileInput {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="controls">
+            <h3>GLB Animation Viewer</h3>
+            <input type="file" id="fileInput" accept=".glb,.gltf" />
+            <br>
+            <button class="btn" onclick="loadGLB('hi.glb')">Load Hi.glb</button>
+            <button class="btn" onclick="loadGLB('No.glb')">Load No.glb</button>
+            <button class="btn" onclick="loadGLB('rest.glb')">Load Rest.glb</button>
+            <button class="btn" onclick="loadGLB('Head Nod Yes.glb')">Load Yes.glb</button>
+            <br><br>
+            <button class="btn" onclick="playAnimation()">Play Animation</button>
+            <button class="btn" onclick="stopAnimation()">Stop Animation</button>
+            <button class="btn" onclick="resetCamera()">Reset Camera</button>
+        </div>
+        
+        <div id="info">
+            <div id="modelInfo">No model loaded</div>
+            <div id="animationInfo">No animations</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        let scene, camera, renderer, controls, clock;
+        let currentModel = null;
+        let mixer = null;
+        let animations = [];
+        let currentAction = null;
+
+        // Initialize the 3D scene
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x222222);
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(2, 2, 2);
+
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Add controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            // Add grid
+            const gridHelper = new THREE.GridHelper(10, 10);
+            scene.add(gridHelper);
+
+            // Clock for animations
+            clock = new THREE.Clock();
+
+            // Handle file input
+            document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+            // Start render loop
+            animate();
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                loadGLBFromURL(url, file.name);
+            }
+        }
+
+        function loadGLB(filename) {
+            loadGLBFromURL(filename, filename);
+        }
+
+        function loadGLBFromURL(url, filename) {
+            const loader = new THREE.GLTFLoader();
+            
+            updateInfo('Loading ' + filename + '...', 'Loading...');
+            
+            loader.load(
+                url,
+                function(gltf) {
+                    // Remove previous model
+                    if (currentModel) {
+                        scene.remove(currentModel);
+                    }
+                    if (mixer) {
+                        mixer.stopAllAction();
+                    }
+
+                    // Add new model
+                    currentModel = gltf.scene;
+                    scene.add(currentModel);
+
+                    // Setup animations
+                    animations = gltf.animations;
+                    if (animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(currentModel);
+                        console.log('Found animations:', animations.map(a => a.name));
+                    }
+
+                    // Auto-fit camera to model
+                    fitCameraToModel(currentModel);
+
+                    // Update info
+                    updateModelInfo(filename, currentModel, animations);
+
+                    // Auto-play first animation if available
+                    if (animations.length > 0) {
+                        playAnimation(0);
+                    }
+
+                    console.log('GLB loaded successfully:', filename);
+                    console.log('Model:', currentModel);
+                    console.log('Animations:', animations);
+                },
+                function(progress) {
+                    console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
+                },
+                function(error) {
+                    console.error('Error loading GLB:', error);
+                    updateInfo('Error loading ' + filename, 'Error: ' + error.message);
+                }
+            );
+        }
+
+        function fitCameraToModel(model) {
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+
+            const maxSize = Math.max(size.x, size.y, size.z);
+            const fitHeightDistance = maxSize / (2 * Math.atan(Math.PI * camera.fov / 360));
+            const fitWidthDistance = fitHeightDistance / camera.aspect;
+            const distance = Math.max(fitHeightDistance, fitWidthDistance);
+
+            const direction = controls.target.clone()
+                .sub(camera.position)
+                .normalize()
+                .multiplyScalar(distance);
+
+            controls.target.copy(center);
+            camera.position.copy(controls.target).sub(direction);
+            camera.lookAt(controls.target);
+
+            controls.maxDistance = distance * 10;
+            controls.update();
+        }
+
+        function playAnimation(index = 0) {
+            if (!mixer || animations.length === 0) {
+                console.log('No animations available');
+                return;
+            }
+
+            // Stop current animation
+            if (currentAction) {
+                currentAction.stop();
+            }
+
+            // Play new animation
+            const clip = animations[index];
+            currentAction = mixer.clipAction(clip);
+            currentAction.reset();
+            currentAction.play();
+
+            console.log('Playing animation:', clip.name, 'Duration:', clip.duration + 's');
+            updateAnimationInfo('Playing: ' + clip.name + ' (' + clip.duration.toFixed(2) + 's)');
+        }
+
+        function stopAnimation() {
+            if (currentAction) {
+                currentAction.stop();
+                console.log('Animation stopped');
+                updateAnimationInfo('Animation stopped');
+            }
+        }
+
+        function resetCamera() {
+            if (currentModel) {
+                fitCameraToModel(currentModel);
+            } else {
+                camera.position.set(2, 2, 2);
+                controls.target.set(0, 0, 0);
+                controls.update();
+            }
+        }
+
+        function updateModelInfo(filename, model, animations) {
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            
+            let meshCount = 0;
+            model.traverse((child) => {
+                if (child.isMesh) meshCount++;
+            });
+
+            const info = `
+                <strong>Model:</strong> ${filename}<br>
+                <strong>Size:</strong> ${size.x.toFixed(3)} x ${size.y.toFixed(3)} x ${size.z.toFixed(3)}<br>
+                <strong>Meshes:</strong> ${meshCount}<br>
+                <strong>Animations:</strong> ${animations.length}
+            `;
+            
+            document.getElementById('modelInfo').innerHTML = info;
+        }
+
+        function updateAnimationInfo(text) {
+            document.getElementById('animationInfo').innerHTML = text;
+        }
+
+        function updateInfo(modelText, animText) {
+            document.getElementById('modelInfo').innerHTML = modelText;
+            document.getElementById('animationInfo').innerHTML = animText;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            
+            if (mixer) {
+                mixer.update(delta);
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Initialize when page loads
+        init();
+    </script>
+</body>
+</html>

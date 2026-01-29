@@ -1,0 +1,511 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Clean Modern Healthcare Theme - SoloLvlUp Style */
+:root {
+  /* Core shadcn design tokens - User's values take precedence */
+  --background: hsl(166 76% 97%);
+  --foreground: hsl(220 13% 18%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(220 13% 18%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(220 13% 18%);
+  --primary: hsl(168 76% 36%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(220 13% 95%);
+  --secondary-foreground: hsl(220 13% 18%);
+  --muted: hsl(220 13% 95%);
+  --muted-foreground: hsl(220 9% 46%);
+  --accent: hsl(270 60% 52%);
+  --accent-foreground: hsl(0 0% 100%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(220 13% 90%);
+  --input: hsl(220 13% 90%);
+  --ring: hsl(168 76% 36%);
+  --radius: 0.75rem;
+  /* User's radius */
+  --chart-1: hsl(168 76% 36%);
+  --chart-2: hsl(270 60% 52%);
+  --chart-3: hsl(200 80% 50%);
+  --chart-4: hsl(142 76% 40%);
+  --chart-5: hsl(45 93% 58%);
+  --sidebar-background: hsl(0 0% 100%);
+  --sidebar-foreground: hsl(220 13% 18%);
+  --sidebar-primary: hsl(168 76% 36%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(166 76% 97%);
+  --sidebar-accent-foreground: hsl(220 13% 18%);
+  --sidebar-border: hsl(220 13% 90%);
+  --sidebar-ring: hsl(168 76% 36%);
+
+  /* Additional shadcn/ui variables from diff (if not present) */
+  --sidebar: var(--sidebar-background);
+  /* Mapping existing to new shadcn var */
+
+  /* Custom theme colors */
+  --color-primary: hsl(168 76% 36%);
+  --color-secondary: hsl(220 13% 95%);
+  --color-accent: hsl(270 60% 52%);
+  --color-success: hsl(142 76% 40%);
+  --color-warning: hsl(45 93% 58%);
+  --color-error: hsl(0 84% 60%);
+  --color-background: hsl(166 76% 97%);
+  --color-surface: hsl(0 0% 100%);
+  --color-text: hsl(220 13% 18%);
+  --color-text-muted: hsl(220 9% 46%);
+  --color-border: hsl(220 13% 90%);
+}
+
+.dark {
+  /* Core shadcn design tokens - User's values take precedence */
+  --background: hsl(222 47% 11%);
+  --foreground: hsl(210 40% 98%);
+  --card: hsl(222 47% 15%);
+  --card-foreground: hsl(210 40% 98%);
+  --popover: hsl(222 47% 15%);
+  --popover-foreground: hsl(210 40% 98%);
+  --primary: hsl(168 76% 42%);
+  --primary-foreground: hsl(222 47% 11%);
+  --secondary: hsl(217 19% 27%);
+  --secondary-foreground: hsl(210 40% 98%);
+  --muted: hsl(217 19% 27%);
+  --muted-foreground: hsl(215 20% 65%);
+  --accent: hsl(270 60% 60%);
+  --accent-foreground: hsl(210 40% 98%);
+  --destructive: hsl(0 63% 31%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(217 19% 27%);
+  --input: hsl(217 19% 27%);
+  --ring: hsl(168 76% 42%);
+  --chart-1: oklch(0.488 0.243 264.376);
+  /* Using diff's chart colors for dark mode */
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar-background: hsl(222 47% 11%);
+  --sidebar-foreground: hsl(210 40% 98%);
+  --sidebar-primary: hsl(168 76% 42%);
+  --sidebar-primary-foreground: hsl(222 47% 11%);
+  --sidebar-accent: hsl(217 19% 27%);
+  --sidebar-accent-foreground: hsl(210 40% 98%);
+  --sidebar-border: hsl(217 19% 27%);
+  --sidebar-ring: hsl(168 76% 42%);
+
+  /* Additional shadcn/ui variables from diff (if not present) */
+  --sidebar: var(--sidebar-background);
+  /* Mapping existing to new shadcn var */
+
+  /* Custom theme colors */
+  --color-primary: hsl(168 76% 42%);
+  --color-secondary: hsl(217 19% 27%);
+  --color-accent: hsl(270 60% 60%);
+  --color-success: hsl(142 76% 40%);
+  --color-warning: hsl(45 93% 58%);
+  --color-error: hsl(0 84% 60%);
+  --color-background: hsl(222 47% 11%);
+  --color-surface: hsl(222 47% 15%);
+  --color-text: hsl(210 40% 98%);
+  --color-text-muted: hsl(215 20% 65%);
+  --color-border: hsl(217 19% 27%);
+}
+
+@theme inline {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", monospace;
+
+  /* User's custom theme color mappings */
+  --color-themed-primary: var(--color-primary);
+  --color-themed-secondary: var(--color-secondary);
+  --color-themed-accent: var(--color-accent);
+  --color-themed-success: var(--color-success);
+  --color-themed-warning: var(--color-warning);
+  --color-themed-error: var(--color-error);
+  --color-themed-background: var(--color-background);
+  --color-themed-surface: var(--color-surface);
+  --color-themed-text: var(--color-text);
+  --color-themed-border: var(--color-border);
+
+  /* Shadcn/ui mappings for theme (merged) */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Base Body Styles */
+body {
+  /* Using @layer base for background and text, so these are redundant if @apply works */
+  /* background: var(--color-background); */
+  /* color: var(--color-text); */
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  min-height: 100vh;
+}
+
+/* Card Styles - Clean White Cards */
+.card-themed {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.card-themed:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Quest Card with Teal Left Border */
+.quest-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.quest-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Active Quest Row Style */
+.active-quest-row {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.active-quest-row:hover {
+  background: hsl(166 76% 97%);
+}
+
+/* Button Styles */
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: hsl(168 76% 32%);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-weight: 500;
+  padding: 0.625rem 1.25rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: var(--color-secondary);
+  border-color: var(--color-text);
+}
+
+.btn-dark {
+  background: hsl(220 13% 18%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  padding: 0.625rem 1.25rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-dark:hover {
+  background: hsl(220 13% 28%);
+}
+
+/* Input Styles */
+.input-themed {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.input-themed:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px hsl(168 76% 36% / 0.15);
+}
+
+.input-themed::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Badge Styles */
+.badge-easy {
+  background: hsl(142 76% 90%);
+  color: hsl(142 76% 30%);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.badge-daily {
+  background: hsl(220 13% 92%);
+  color: hsl(220 13% 35%);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.badge-xp {
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 9999px;
+}
+
+/* Hero Profile Card - Blue to Teal Gradient */
+.hero-profile {
+  background: linear-gradient(135deg, hsl(200 80% 50%) 0%, hsl(168 76% 36%) 100%);
+  border-radius: 1rem;
+  padding: 2rem;
+  color: white;
+}
+
+.hero-stat-card {
+  background: hsl(200 80% 45% / 0.3);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+  backdrop-filter: blur(4px);
+}
+
+/* Progress Bar */
+.progress-bar {
+  background: hsl(142 76% 36% / 0.3);
+  border-radius: 9999px;
+  height: 0.5rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background: hsl(142 76% 50%);
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+/* Navigation Styles */
+.nav-link {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  transition: color 0.2s ease;
+  text-decoration: none;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--color-primary);
+}
+
+/* Feature Card Style */
+.feature-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Empty State */
+.empty-state {
+  border: 2px dashed var(--color-border);
+  border-radius: 1rem;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+/* Tabs */
+.tabs-container {
+  display: flex;
+  gap: 0.25rem;
+  background: transparent;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab-trigger {
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-trigger:hover {
+  color: var(--color-text);
+}
+
+.tab-trigger[data-state="active"] {
+  color: var(--color-text);
+  border-bottom-color: var(--color-text);
+}
+
+/* Switch Toggle */
+.switch-toggle {
+  width: 2.75rem;
+  height: 1.5rem;
+  background: var(--color-border);
+  border-radius: 9999px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.switch-toggle[data-state="checked"] {
+  background: hsl(220 13% 18%);
+}
+
+.switch-toggle::after {
+  content: '';
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: white;
+  border-radius: 9999px;
+  top: 0.125rem;
+  left: 0.125rem;
+  transition: transform 0.2s ease;
+}
+
+.switch-toggle[data-state="checked"]::after {
+  transform: translateX(1.25rem);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Selection */
+::selection {
+  background: hsl(168 76% 36% / 0.2);
+  color: var(--color-text);
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+  body {
+    font-size: 14px;
+  }
+
+  .hero-profile {
+    padding: 1.5rem;
+  }
+
+  .hero-stat-card {
+    padding: 0.75rem;
+  }
+}
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}

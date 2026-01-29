@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Nurse Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-gradient-to-b from-[#03060c] to-[#050912] text-white font-['Space_Grotesk']">
+    <main class="flex flex-col h-screen">
+        <!-- 3D Model Container -->
+        <section id="model-container" class="relative flex-1 min-h-[420px]">
+            <div id="scene-container" class="absolute inset-0"></div>
+            <div id="loading" class="absolute inset-0 flex flex-col gap-3 items-center justify-center bg-black/50 text-white text-lg tracking-wide">
+                <span class="loading-dot"></span>
+                <p>Bringing your nurse online...</p>
+            </div>
+            <div id="greet-bubble" class="greet-bubble">
+                <span class="wave-hand">👋</span>
+                <div class="greet-copy">
+                    <p class="greet-title">Hi!</p>
+                    <p class="greet-sub">I'm ready to help.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Container -->
+        <section id="chat-container" class="w-full bg-black/40 border-t border-white/5 px-4 py-4 md:px-8 md:py-5">
+            <div class="max-w-4xl mx-auto flex flex-col gap-3">
+                <div id="chat-messages" class="h-48 md:h-56 overflow-y-auto space-y-4 pr-1"></div>
+                <div class="flex gap-3">
+                    <input type="text" id="user-input"
+                           class="chat-input flex-1 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-white placeholder-white/40 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                           placeholder="Talk to the nurse...">
+                    <button id="send-btn"
+                            class="shimmer-btn px-6 py-3 rounded-2xl text-base font-semibold text-white">
+                        Send
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-3 text-xs uppercase tracking-[0.2em] text-white/70">
+                    <button id="play-hi" class="test-btn">Hi</button>
+                    <button id="play-no" class="test-btn">No</button>
+                    <button id="play-rest" class="test-btn">Rest</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Three.js and other scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/DRACOLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/utils/SkeletonUtils.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
