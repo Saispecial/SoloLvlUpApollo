@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useImperativeHandle, forwardRef, use } from "react"
+import { useState, useEffect, useImperativeHandle, forwardRef, use, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { generateQuests } from "@/lib/gemini-api"
 import { useAppStore } from "@/stores/app-store"
@@ -32,7 +32,7 @@ import { WeekBasedModuleGrouping } from "./week-based-module-grouping"
 import { ProgramCompletionCelebration, useProgramCompletionCheck } from "./program-completion-celebration"
 import { useTourStore } from "@/stores/tour-store"
 
-const Dashboard = forwardRef(function Dashboard(props, ref) {
+const DashboardContent = forwardRef(function DashboardContent(props, ref) {
   // Use unified app store
   const {
     nurse,
@@ -574,6 +574,22 @@ const Dashboard = forwardRef(function Dashboard(props, ref) {
         )}
       </motion.div>
     </div>
+  )
+})
+
+// Wrapper component with Suspense boundary
+const Dashboard = forwardRef(function Dashboard(props, ref) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F0FDFA] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-teal-600">Loading dashboard...</p>
+        </div>
+      </div>
+    }>
+      <DashboardContent {...props} ref={ref} />
+    </Suspense>
   )
 })
 
