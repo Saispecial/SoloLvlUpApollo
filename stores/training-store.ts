@@ -85,6 +85,8 @@ interface TrainingState {
   getTaskCompletion: (taskId: string) => TrainingCompletion | undefined
 }
 
+console.log("[v0] Initializing training-store...")
+
 // Week 1 Training Data (from JSON)
 export const TRAINING_TASKS: TrainingTask[] = [
   // Day 1 - Awareness & Grounding
@@ -857,7 +859,9 @@ export const EI_STAT_COLORS: Record<string, string> = {
 
 export const useTrainingStore = create<TrainingState>()(
   persist(
-    (set, get) => ({
+    (set, get) => {
+      console.log("[v0] training-store persist middleware initializing...")
+      return {
       courseStartDate: null,
       completedTasks: [],
       
@@ -917,12 +921,15 @@ export const useTrainingStore = create<TrainingState>()(
       getTaskCompletion: (taskId: string) => {
         return get().completedTasks.find(t => t.taskId === taskId)
       }
-    }),
+    }},
     {
-      name: "training-progress"
+      name: "training-progress",
+      storage: createJSONStorage(() => safeLocalStorage),
     }
   )
 )
+
+console.log("[v0] training-store initialized successfully")
 
 // Helper to get tasks by day
 export const getTasksByDay = (week: number, day: number): TrainingTask[] => {

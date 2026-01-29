@@ -122,9 +122,13 @@ const createInitialDetailedTracking = (): DetailedTracking => ({
   lastUpdated: new Date(),
 })
 
+console.log("[v0] Initializing app-store...")
+
 export const useAppStore = create<AppStore>()(
   persist(
-    (set, get) => ({
+    (set, get) => {
+      console.log("[v0] app-store persist middleware initializing...")
+      return {
       nurse: {
         ...createInitialPlayer(),
         competencyLevel: 1,
@@ -664,6 +668,8 @@ export const useAppStore = create<AppStore>()(
     },
   ),
 )
+
+console.log("[v0] app-store initialized successfully")
 
 // Backward compatibility exports
 export const useNurseStore = useAppStore

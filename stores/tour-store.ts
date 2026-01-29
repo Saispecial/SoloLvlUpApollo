@@ -112,9 +112,13 @@ interface TourStore {
   resetTour: () => void
 }
 
+console.log("[v0] Initializing tour-store...")
+
 export const useTourStore = create<TourStore>()(
   persist(
-    (set, get) => ({
+    (set, get) => {
+      console.log("[v0] tour-store persist middleware initializing...")
+      return {
       isTourActive: false,
       currentStepIndex: 0,
       showNewUserPopup: false,
@@ -155,10 +159,12 @@ export const useTourStore = create<TourStore>()(
       resetTour: () => {
         set({ isTourActive: false, currentStepIndex: 0, showNewUserPopup: false, hasSeenTour: false })
       },
-    }),
+    }},
     {
       name: "tour-store",
       storage: createJSONStorage(() => safeLocalStorage),
     }
   )
 )
+
+console.log("[v0] tour-store initialized successfully")

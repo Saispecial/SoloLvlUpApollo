@@ -20,6 +20,7 @@ export const viewport: Viewport = {
 }
 
 import { TourOverlay } from "@/components/tour/TourOverlay"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 export default function RootLayout({
   children,
@@ -29,8 +30,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased bg-[#F0FDFA]`}>
-        {children}
-        <TourOverlay />
+        <ErrorBoundary>
+          {children}
+          <TourOverlay />
+        </ErrorBoundary>
       </body>
     </html>
   )
