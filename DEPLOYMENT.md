@@ -18,9 +18,9 @@
    - Build Command: `npm run build` (auto-detected)
    - Output Directory: `.next` (auto-detected)
    - Install Command: `npm install` (auto-detected)
-   - Node.js Version: **18.x** (recommended)
+   - Node.js Version: **18.x** (default)
 
-3. **Environment Variables**
+3. **Environment Variables** (Optional)
    Add these in Vercel Dashboard → Settings → Environment Variables:
 
    ```env
@@ -38,19 +38,19 @@
 
 ## 🔧 Vercel Configuration
 
-The project includes `vercel.json` with optimized settings:
+This project uses **zero-configuration deployment** with Vercel:
 
 - **Framework**: Next.js (auto-detected)
-- **Region**: US East (iad1) for optimal performance
-- **Security Headers**: XSS protection, content type sniffing prevention
 - **Runtime**: Node.js 18.x (default)
+- **Build**: Automatic optimization
+- **No custom vercel.json needed** - Vercel handles everything automatically
 
 ## 📊 Build Optimization
 
 - **Next.js 16.1.6**: Latest stable version with security fixes
 - **Package Import Optimization**: Faster builds and smaller bundles
 - **Image Optimization**: Disabled for compatibility (can be enabled if needed)
-- **Turbopack**: Configured for faster builds
+- **Zero Configuration**: Vercel auto-detects all settings
 
 ## 🔍 Troubleshooting
 
@@ -97,9 +97,9 @@ The project includes `vercel.json` with optimized settings:
 
 ## 🔒 Security
 
-- All security headers are configured in `vercel.json`
+- HTTPS is enforced by default
 - Environment variables are encrypted at rest
 - API routes use proper authentication
-- HTTPS is enforced by default
+- Vercel provides built-in security headers
 
 Your SoloLvlUpApollo app is now ready for production on Vercel! 🎉
