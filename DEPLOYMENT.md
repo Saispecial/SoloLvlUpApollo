@@ -14,10 +14,11 @@
    - Import `Saispecial/SoloLvlUpApollo`
 
 2. **Configure Project**
-   - Framework Preset: **Next.js**
+   - Framework Preset: **Next.js** (auto-detected)
    - Build Command: `npm run build` (auto-detected)
    - Output Directory: `.next` (auto-detected)
    - Install Command: `npm install` (auto-detected)
+   - Node.js Version: **18.x** (recommended)
 
 3. **Environment Variables**
    Add these in Vercel Dashboard → Settings → Environment Variables:
@@ -39,17 +40,17 @@
 
 The project includes `vercel.json` with optimized settings:
 
-- **Runtime**: Node.js 20.x
+- **Framework**: Next.js (auto-detected)
 - **Region**: US East (iad1) for optimal performance
 - **Security Headers**: XSS protection, content type sniffing prevention
-- **API Routes**: Properly configured for serverless functions
+- **Runtime**: Node.js 18.x (default)
 
 ## 📊 Build Optimization
 
 - **Next.js 16.1.6**: Latest stable version with security fixes
-- **Standalone Output**: Optimized for serverless deployment
 - **Package Import Optimization**: Faster builds and smaller bundles
 - **Image Optimization**: Disabled for compatibility (can be enabled if needed)
+- **Turbopack**: Configured for faster builds
 
 ## 🔍 Troubleshooting
 
@@ -57,6 +58,7 @@ The project includes `vercel.json` with optimized settings:
 - Check environment variables are set correctly
 - Ensure all required API keys are provided
 - Review build logs in Vercel dashboard
+- Verify Node.js version is 18.x or higher
 
 ### Runtime Errors
 - Check function logs in Vercel dashboard
