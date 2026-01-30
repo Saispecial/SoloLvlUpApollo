@@ -90,7 +90,7 @@ export function TEIQueSFForm({ onComplete }: TEIQueSFFormProps) {
           <Button
             onClick={handleNext}
             disabled={!currentAnswer}
-            className="bg-warm-gradient-teal text-white"
+            className="!bg-transparent !border-2 !border-black !text-black hover:!bg-teal-600 hover:!border-teal-600 hover:!text-white"
           >
             {currentQuestion === TEIQUE_QUESTIONS.length - 1 ? (
               "Complete Assessment"

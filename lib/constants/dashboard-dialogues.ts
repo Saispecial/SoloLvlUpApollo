@@ -1,0 +1,22 @@
+export const DASHBOARD_DIALOGUES = [
+    "Welcome back, Hero! Ready to level up your nursing skills today? Let's make a difference!",
+    "Your dedication to patient care is inspiring. Remember, every small act of kindness matters!",
+    "Energy check! You are doing an amazing job. Take a deep breath and keep shining!",
+    "Did you know? Emotional Intelligence is a superpower in nursing. Let's strengthen it together!",
+    "You've got this! Challenges are just opportunities for growth. Let's tackle them head-on!",
+    "Nursing is heart work. Thank you for bringing your heart to work every single day!",
+    "Time to recharge! Even superheroes need a break. Don't forget to care for yourself too.",
+    "Hello there! I'm here to support you. Let's navigate the complexities of healthcare together.",
+    "Feeling overwhelmed? That's okay. Take it one step at a time. I'm right here with you.",
+    "Your empathy changes lives. Never underestimate the power of listening to your patients.",
+    "Let's boost that EI score! Understanding emotions is the key to better patient outcomes.",
+    "Review your day, reflect on your wins, and learn from the rest. You are growing every day!",
+    "Confidence comes from competence and compassion. You have both in abundance!",
+    "Stay curious! Every patient is a unique story waiting to be understood.",
+    "Teamwork makes the dream work. excellent communication is the bridge to great care.",
+    "Rise and shine! The world needs your skills and your smile today.",
+    "Remember your 'Why'. The reason you became a nurse is your strongest fuel.",
+    "SoloLvlUp is your safe space to practice and improve. No judgment, just growth!",
+    "Compassion fatigue is real. Check in with your feelings today. It's okay to not be okay.",
+    "You are a vital part of the healthcare team. Your specific contribution is irreplaceable!"
+];

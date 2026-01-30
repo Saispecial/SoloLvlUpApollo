@@ -7,11 +7,12 @@ import * as THREE from 'three'
 import { EmotionType } from './Enhanced3DNurseScene'
 import { useThreeJSModel } from '@/hooks/useThreeJSModel'
 import { useAnimationController } from '@/hooks/useAnimationController'
-import { useExternalAnimations } from '@/hooks/useExternalAnimations'
 import { usePointerTracking } from '@/hooks/usePointerTracking'
 import { LightingSystem } from './LightingSystem'
 import { NurseModel } from './NurseModel'
+import { GLBAnimationRunner } from './GLBAnimationRunner'
 import { VisualFeedbackSystem } from './VisualFeedbackSystem'
+// Note: We are bypassing useExternalModelManager in favor of direct local state for simpler exclusive switching
 
 interface ThreeJSSceneManagerProps {
   emotion: EmotionType
@@ -28,12 +29,20 @@ export function ThreeJSSceneManager({
   viewportScale,
   onLoadingProgress,
   onModelLoad,
-  onError
-}: ThreeJSSceneManagerProps) {
+  onError,
+  flyDirection = 'center'
+}: ThreeJSSceneManagerProps & { flyDirection?: 'left' | 'right' | 'center' }) {
   const { scene, camera, gl } = useThree()
-  const controlsRef = useRef<any>()
-  
-  // Model loading state
+  const controlsRef = useRef<any>(null)
+
+  // Internal Logic:
+  // If emotion is in [hi, yes, no], we switch to EXTERNAL MODE.
+  // In EXTERNAL MODE, we render GLBAnimationRunner.
+  // When runner completes, we switch back to INTERNAL MODE.
+
+  const [externalAnimKey, setExternalAnimKey] = useState<string | null>(null)
+
+  // Model loading state (Main Model)
   const {
     model,
     animations,
@@ -43,31 +52,15 @@ export function ThreeJSSceneManager({
     loadModel
   } = useThreeJSModel('/nurse+robot+3d+model.glb')
 
-  // Animation control
+  // Animation control (internal)
   const {
     playAnimation,
     setEmotion: setAnimationEmotion,
     startTalkingLoop,
     stopTalkingLoop,
-    playExternalAnimation,
-    loadExternalAnimation,
-    isExternalAnimationLoaded
   } = useAnimationController(mixer, animations)
 
-  // External animations loading
-  const {
-    loadAllExternalAnimations,
-    loadExternalAnimationByKey,
-    isLoading: isLoadingExternalAnimations,
-    loadedAnimations,
-    failedAnimations,
-    progress: externalAnimationsProgress
-  } = useExternalAnimations({
-    loadExternalAnimation,
-    isExternalAnimationLoaded
-  })
-
-  // Pointer tracking for head movement
+  // Pointer tracking
   const {
     pointerPosition,
     headOrientation,
@@ -78,38 +71,34 @@ export function ThreeJSSceneManager({
   useEffect(() => {
     if (isLoading) {
       onLoadingProgress(0, 'Loading 3D model...')
-    } else if (isLoadingExternalAnimations) {
-      onLoadingProgress(50 + (externalAnimationsProgress * 0.5), 'Loading external animations...')
     } else if (model && !error) {
       onLoadingProgress(100, 'Model loaded successfully')
       onModelLoad()
     }
-  }, [isLoading, isLoadingExternalAnimations, externalAnimationsProgress, model, error, onLoadingProgress, onModelLoad])
+  }, [isLoading, model, error, onLoadingProgress, onModelLoad])
 
   // Handle errors
   useEffect(() => {
-    if (error) {
-      onError(error)
-    }
+    if (error) onError(error)
   }, [error, onError])
 
-  // Handle emotion changes
+  // WATCH EMOTION CHANGES -> TRIGGER EXTERNAL
   useEffect(() => {
-    if (model && mixer) {
-      // Check if this is a one-shot external animation
-      const oneShotAnimations = ['hi', 'yes', 'no']
-      if (oneShotAnimations.includes(emotion) && isExternalAnimationLoaded(emotion)) {
-        playExternalAnimation(emotion, 'neutral')
-      } else {
+    const oneShotExternal = ['hi', 'yes', 'no', 'talking 1', 'talking 2']
+    if (oneShotExternal.includes(emotion)) {
+      // Trigger External
+      setExternalAnimKey(emotion)
+    } else {
+      // Normal internal emotion
+      if (!externalAnimKey) {
         setAnimationEmotion(emotion)
       }
     }
-  }, [emotion, model, mixer, setAnimationEmotion, playExternalAnimation, isExternalAnimationLoaded])
+  }, [emotion, setAnimationEmotion])
 
-  // Handle talking state changes
+  // TALKING LOGIC
   useEffect(() => {
     if (!model || !mixer) return
-
     if (isTalking) {
       startTalkingLoop()
     } else {
@@ -117,50 +106,29 @@ export function ThreeJSSceneManager({
     }
   }, [isTalking, model, mixer, startTalkingLoop, stopTalkingLoop])
 
-  // Set up scene background
-  useEffect(() => {
-    scene.background = new THREE.Color(0x04060d)
-  }, [scene])
-
-  // Handle pointer events
-  const handlePointerMove = useCallback((event: React.PointerEvent) => {
-    const rect = gl.domElement.getBoundingClientRect()
-    const x = (event.clientX - rect.left) / rect.width
-    const y = (event.clientY - rect.top) / rect.height
-    
-    // Update pointer tracking (this will be implemented in the hook)
-    // For now, we'll just log the position
-    console.log('Pointer position:', { x, y })
-  }, [gl])
-
-  const handlePointerLeave = useCallback(() => {
-    resetPointer()
-  }, [resetPointer])
-
-  // Animation loop
+  // Animation loop (Main Model mixer) - OPTIMIZED
   useFrame((state, delta) => {
-    // Update animation mixer
-    if (mixer) {
-      mixer.update(delta)
+    // Cap delta to prevent large jumps
+    const cappedDelta = Math.min(delta, 0.1)
+    
+    // Only update main mixer if we are NOT playing external
+    if (!externalAnimKey && mixer) {
+      mixer.update(cappedDelta)
     }
-
-    // Update controls
-    if (controlsRef.current) {
-      controlsRef.current.update()
-    }
+    if (controlsRef.current) controlsRef.current.update()
   })
+
+  // Set scene bg
+  useEffect(() => { scene.background = null }, [scene])
+
+  const handlePointerMove = useCallback((event: React.PointerEvent) => {
+    // No-op for now
+  }, [])
+  const handlePointerLeave = useCallback(() => { resetPointer() }, [resetPointer])
 
   return (
     <>
-      {/* Camera and Controls */}
-      <PerspectiveCamera
-        makeDefault
-        position={[0, 1.4, 3]}
-        fov={50}
-        near={0.1}
-        far={100}
-      />
-      
+      <PerspectiveCamera makeDefault position={[0, 1.4, 3]} fov={50} near={0.1} far={100} />
       <OrbitControls
         ref={controlsRef}
         enableDamping
@@ -170,38 +138,43 @@ export function ThreeJSSceneManager({
         minDistance={1.2}
         maxDistance={6}
       />
-
-      {/* Lighting System */}
       <LightingSystem emotion={emotion} isTalking={isTalking} />
 
-      {/* 3D Model */}
-      {model && (
-        <>
-          <NurseModel
-            model={model}
-            emotion={emotion}
-            isTalking={isTalking}
-            headOrientation={headOrientation}
-            viewportScale={viewportScale}
-          />
-          
-          {/* Visual Feedback System (synthetic eyes, etc.) */}
-          <VisualFeedbackSystem
-            emotion={emotion}
-            isTalking={isTalking}
-            model={model}
-            enableSyntheticEyes={false} // Can be made configurable
-          />
-        </>
+      {/* STRICT EXCLUSIVE RENDERING */}
+      {externalAnimKey ? (
+        // RENDER ONLY RUNNER
+        <GLBAnimationRunner
+          animationKey={externalAnimKey}
+          viewportScale={viewportScale}
+          onComplete={() => {
+            setExternalAnimKey(null)
+            setAnimationEmotion('neutral')
+          }}
+        />
+      ) : (
+        // RENDER MAIN MODEL
+        model && (
+          <>
+            <NurseModel
+              model={model}
+              emotion={emotion}
+              isTalking={isTalking}
+              headOrientation={headOrientation}
+              viewportScale={viewportScale}
+              flyDirection={flyDirection}
+              opacity={1}
+            />
+            <VisualFeedbackSystem
+              emotion={emotion}
+              isTalking={isTalking}
+              model={model}
+              enableSyntheticEyes={false}
+            />
+          </>
+        )
       )}
 
-      {/* Pointer event handlers */}
-      <mesh
-        position={[0, 0, 0]}
-        onPointerMove={handlePointerMove}
-        onPointerLeave={handlePointerLeave}
-        visible={false}
-      >
+      <mesh position={[0, 0, 0]} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave} visible={false}>
         <planeGeometry args={[20, 20]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>

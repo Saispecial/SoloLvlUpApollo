@@ -68,7 +68,7 @@ export function AssessmentResults({ results }: AssessmentResultsProps) {
 
       if (data.modules && Array.isArray(data.modules) && data.modules.length > 0) {
         console.log("[AssessmentResults] Roadmap modules received:", data.modules)
-        
+
         // Store program information
         if (data.program) {
           setProgramInfo({
@@ -76,13 +76,13 @@ export function AssessmentResults({ results }: AssessmentResultsProps) {
             duration: data.program.duration,
             rationale: data.program.rationale,
           })
-          
+
           // Set active program in nurse store
           if (data.program.id) {
             setActiveProgram(data.program.id, new Date())
           }
         }
-        
+
         // Ensure modules have all required fields
         const formattedModules = data.modules.map((module: any) => ({
           ...module,
@@ -97,20 +97,20 @@ export function AssessmentResults({ results }: AssessmentResultsProps) {
           completed: false,
           createdAt: new Date(),
         }))
-        
+
         console.log("[AssessmentResults] Formatted modules:", formattedModules)
-        
+
         // Add modules to the store
         console.log("[AssessmentResults] Calling addTrainingModules with:", formattedModules)
         addTrainingModules(formattedModules)
-        
+
         // Wait a bit to ensure store is persisted and Zustand has time to update
         await new Promise(resolve => setTimeout(resolve, 800))
-        
+
         // Verify modules were added by checking the store directly
         const storeState = useAppStore.getState()
         const addedModules = storeState.trainingModules.slice(-formattedModules.length)
-        
+
         console.log("[AssessmentResults] Store verification:", {
           totalTrainingModules: storeState.trainingModules.length,
           expectedCount: formattedModules.length,
@@ -118,7 +118,7 @@ export function AssessmentResults({ results }: AssessmentResultsProps) {
           addedModules: addedModules.map(m => ({ id: m.id, title: m.title })),
           questsCount: storeState.quests?.length || 0,
         })
-        
+
         if (addedModules.length === 0) {
           console.error("[AssessmentResults] WARNING: Modules were not added to store!")
           toast({
@@ -128,9 +128,9 @@ export function AssessmentResults({ results }: AssessmentResultsProps) {
             duration: 5000,
           })
         }
-        
+
         setRoadmapGenerated(true)
-        
+
         toast({
           title: "Roadmap Generated!",
           description: `Added ${addedModules.length || data.modules.length} training modules. Redirecting to Training Modules...`,
@@ -180,7 +180,7 @@ export function AssessmentResults({ results }: AssessmentResultsProps) {
 
       // Convert to JSON string
       const jsonString = JSON.stringify(report, null, 2)
-      
+
       // Create blob and download
       const blob = new Blob([jsonString], { type: "application/json" })
       const url = URL.createObjectURL(blob)
@@ -312,7 +312,7 @@ export function AssessmentResults({ results }: AssessmentResultsProps) {
         <Button
           onClick={handleGenerateRoadmap}
           disabled={isGeneratingRoadmap || roadmapGenerated}
-          className="flex-1 bg-warm-gradient-teal text-white disabled:opacity-50"
+          className="flex-1 !bg-transparent !border-2 !border-black !text-black hover:!bg-teal-600 hover:!border-teal-600 hover:!text-white disabled:opacity-50 shadow-sm"
         >
           {isGeneratingRoadmap ? (
             <>

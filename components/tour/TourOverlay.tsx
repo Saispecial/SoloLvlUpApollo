@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useAnimation } from "framer-motion"
 import { useRouter, usePathname } from "next/navigation"
 import { useTourStore, TOUR_STEPS } from "@/stores/tour-store"
 import { Button } from "@/components/ui/button"
@@ -37,28 +37,37 @@ export function TourOverlay() {
       window.speechSynthesis?.cancel()
 
       const utterance = new SpeechSynthesisUtterance(text)
-      
+
       // Attempt to find a female voice
       const voices = window.speechSynthesis?.getVoices() || []
-      const femaleVoice = voices.find(v => 
-        v.name.includes('Female') || 
-        v.name.includes('Zira') || 
+      const femaleVoice = voices.find(v =>
+        v.name.includes('Female') ||
+        v.name.includes('Zira') ||
         v.name.includes('Samantha') ||
         v.name.includes('Google US English')
       )
-      
+
       if (femaleVoice) {
         utterance.voice = femaleVoice
       }
-      
+
       utterance.rate = 1.0
       utterance.pitch = 1.1 // Slightly higher pitch for friendlier tone
 
-      utterance.onstart = () => setIsTalking(true)
-      utterance.onend = () => setIsTalking(false)
+      utterance.onstart = () => {
+        if (!isTalking) setIsTalking(true)
+      }
+      utterance.onend = () => {
+        // Keep talking for a moment to finish animation cycle naturally, 
+        // effectively blending the end of speech.
+        setTimeout(() => setIsTalking(false), 300) // Reduced buffer
+      }
       utterance.onerror = () => setIsTalking(false)
 
       window.speechSynthesis?.speak(utterance)
+
+      // Force talking state immediately as a fallback in case onstart is delayed
+      if (!isTalking) setIsTalking(true)
     }
 
     // Small delay to allow page transition before speaking
@@ -79,14 +88,14 @@ export function TourOverlay() {
       // Note: simple check, might need more robust matching for query params
       const targetPath = currentStep.route.split('?')[0]
       const currentPath = pathname
-      
+
       if (currentPath !== targetPath) {
         router.push(currentStep.route)
       } else if (currentStep.route.includes('?')) {
         // Force push if query params differ (simplified)
         router.push(currentStep.route)
       }
-      
+
       // Start talking animation (fallback if speech synthesis fails/delays)
       setIsTalking(true)
     }
@@ -103,29 +112,29 @@ export function TourOverlay() {
         >
           {/* Decorative background */}
           <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-teal-50 to-transparent -z-10" />
-          
+
           <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
             👋
           </div>
-          
+
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome!</h2>
           <p className="text-gray-600 mb-6">
             Are you a new user? I'd love to show you around and explain how everything works.
           </p>
-          
+
           <div className="space-y-3">
-            <Button 
+            <Button
               className="w-full bg-teal-600 hover:bg-teal-700 text-white text-lg h-12 rounded-xl"
               onClick={() => {
                 // Immediately mark as seen so it doesn't pop up again if they refresh/re-navigate
-                setHasSeenTour(true) 
+                setHasSeenTour(true)
                 startTour()
               }}
             >
               Yes, show me around!
             </Button>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="w-full text-gray-500 hover:text-gray-700 hover:bg-gray-100"
               onClick={() => {
                 setShowNewUserPopup(false)
@@ -140,6 +149,57 @@ export function TourOverlay() {
     )
   }
 
+  // Animation controls for the flying motion
+  const controls = useAnimation()
+  const [flyDirection, setFlyDirection] = useState<'left' | 'right' | 'center'>('center')
+
+  // Sync fly direction with animation loop (16s total)
+  // 0-8s: Moving Left (Face Left)
+  // 8-16s: Moving Right (Face Right)
+  useEffect(() => {
+    if (isTalking) {
+      // Initialize direciton
+      setFlyDirection('left')
+
+      const interval = setInterval(() => {
+        setFlyDirection(prev => prev === 'left' ? 'right' : 'left')
+      }, 8000) // Switch every 8 seconds (half of 16s loop)
+
+      return () => clearInterval(interval)
+    } else {
+      setFlyDirection('center')
+    }
+  }, [isTalking])
+
+  useEffect(() => {
+    if (isTalking) {
+      controls.start({
+        y: [0, -40, -10, -50, 0],
+        x: [0, -680, 0], // Patrol L->R loop
+        // FLIP to face path: 
+        // 0 -> 0.5 (Moving Left): ScaleX 1 (Normal/Left)
+        // 0.5 -> 1 (Moving Right): ScaleX -1 (Flipped/Right)
+        opacity: 1,
+        transition: {
+          y: {
+            repeat: Infinity,
+            duration: 6,
+            ease: "easeInOut"
+          },
+          x: {
+            repeat: Infinity,
+            duration: 16,
+            ease: "easeInOut",
+            times: [0, 0.5, 1]
+          },
+          opacity: { duration: 0.5 }
+        }
+      })
+    } else {
+      controls.stop() // Freeze in place ("let it be its position")
+    }
+  }, [isTalking, controls])
+
   // Tour Overlay
   if (isTourActive && currentStep) {
     return (
@@ -148,16 +208,18 @@ export function TourOverlay() {
         <div className="absolute inset-0 bg-black/10 pointer-events-auto" />
 
         {/* Tour Content Container */}
-        <div className="relative w-full max-w-md mx-auto pointer-events-auto">
-          
+        <div className="relative w-full max-w-md sm:max-w-3xl mx-auto pointer-events-auto">
+
           {/* 3D Model Container - Positioned to not block center content completely */}
-          <motion.div 
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
+          <motion.div
+            initial={{ y: 0, x: 0, opacity: 0 }} // Start neutral
+            animate={controls} // Use imperative controls
             exit={{ y: 100, opacity: 0 }}
-            className="absolute bottom-0 right-0 w-48 h-64 sm:w-64 sm:h-80 z-10"
+            className="absolute bottom-20 right-4 w-28 h-40 sm:w-48 sm:h-64 z-10" // Smaller size and adjusted position
           >
-             <Enhanced3DNurseScene emotion="happy" isTalking={isTalking} />
+            {/* Disable skeletal talking animation (isTalking={false}) and force neutral emotion */}
+            {/* The movement is now handled by the container "flying" */}
+            <Enhanced3DNurseScene emotion="neutral" isTalking={false} />
           </motion.div>
 
           {/* Speech Bubble / Control Panel */}
@@ -165,7 +227,7 @@ export function TourOverlay() {
             key={currentStep.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute bottom-4 left-4 right-4 sm:left-0 sm:right-auto sm:w-[calc(100%-14rem)] bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-teal-100 mb-20 sm:mb-0 mr-36 sm:mr-0"
+            className="absolute bottom-4 left-4 right-4 sm:left-0 sm:right-auto sm:w-[calc(100%-20rem)] bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-teal-100 mb-20 sm:mb-0 mr-44 sm:mr-0 z-20"
           >
             <div className="flex items-start gap-3">
               <div className="flex-1">

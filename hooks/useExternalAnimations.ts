@@ -13,8 +13,8 @@ const externalAnimationConfigs: ExternalAnimationConfig[] = [
   { key: 'yes', filename: 'Head Nod Yes.glb', description: 'Yes nodding animation' },
   { key: 'no', filename: 'No.glb', description: 'No shaking animation' },
   { key: 'rest', filename: 'rest.glb', description: 'Rest/idle animation' },
-  { key: 'talking1', filename: 'Talking 1.glb', description: 'Talking variation 1' },
-  { key: 'talking2', filename: 'Talking 2.glb', description: 'Talking variation 2' }
+  { key: 'talking 1', filename: 'Talking 1.glb', description: 'Talking variation 1' },
+  { key: 'talking 2', filename: 'Talking 2.glb', description: 'Talking variation 2' }
 ]
 
 interface UseExternalAnimationsProps {
@@ -35,7 +35,7 @@ interface UseExternalAnimationsResult {
 export function useExternalAnimations({
   loadExternalAnimation,
   isExternalAnimationLoaded,
-  basePath = '/nurce ui/'
+  basePath = ''
 }: UseExternalAnimationsProps): UseExternalAnimationsResult {
   const isLoadingRef = useRef(false)
   const loadedAnimationsRef = useRef<Set<string>>(new Set())
@@ -55,9 +55,9 @@ export function useExternalAnimations({
     }
 
     try {
-      const url = `${basePath}${config.filename}`
+      const url = `${basePath}/${config.filename}`
       console.log(`Loading external animation "${key}" from ${url}`)
-      
+
       await loadExternalAnimation(key, url)
       loadedAnimationsRef.current.add(key)
       console.log(`Successfully loaded external animation "${key}"`)

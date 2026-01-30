@@ -114,7 +114,7 @@ export function AssessmentSelector({ onSelectTool }: AssessmentSelectorProps) {
 
               <Button
                 onClick={() => onSelectTool(tool.id)}
-                className="w-full bg-warm-gradient-teal text-white"
+                className="w-full !bg-transparent !border-2 !border-black !text-black hover:!bg-teal-600 hover:!border-teal-600 hover:!text-white shadow-sm transition-all hover:scale-[1.02]"
               >
                 Start Assessment
               </Button>

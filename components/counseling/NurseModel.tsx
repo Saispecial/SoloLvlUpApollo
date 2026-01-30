@@ -9,9 +9,21 @@ interface NurseModelProps {
   isTalking: boolean
   headOrientation: { tilt: number; turn: number }
   viewportScale: number
+  flyDirection?: 'left' | 'right' | 'center'
+  opacity?: number
 }
 
-// Emotion-based pose targets
+interface NurseModelProps {
+  model: THREE.Object3D
+  emotion: EmotionType
+  isTalking: boolean
+  headOrientation: { tilt: number; turn: number }
+  viewportScale: number
+  flyDirection?: 'left' | 'right' | 'center'
+  opacity?: number
+}
+
+// ... emotionTargets constant remains same ...
 const emotionTargets = {
   neutral: { tilt: 0, turn: 0, bob: 0.018 },
   happy: { tilt: -0.04, turn: 0.02, bob: 0.028 },
@@ -25,25 +37,69 @@ const emotionTargets = {
   rest: { tilt: 0, turn: 0, bob: 0.01 }
 }
 
-export function NurseModel({ model, emotion, isTalking, headOrientation, viewportScale }: NurseModelProps) {
+export function NurseModel({
+  model,
+  emotion,
+  isTalking,
+  headOrientation,
+  viewportScale,
+  flyDirection = 'center',
+  opacity = 1
+}: NurseModelProps) {
   const modelRef = useRef<THREE.Object3D>(null)
   const expressionTargetsRef = useRef(emotionTargets.neutral)
+  const targetBodyRotationY = useRef(-Math.PI / 2) // Default base rotation
+
+  // Update material opacity
+  useEffect(() => {
+    if (model) {
+      model.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh
+          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+
+          materials.forEach((mat) => {
+            mat.transparent = true // Always set transparent to allow fade
+            mat.opacity = opacity
+          })
+        }
+      })
+    }
+  }, [model, opacity])
 
   // Update expression targets when emotion changes
   useEffect(() => {
     expressionTargetsRef.current = emotionTargets[emotion]
   }, [emotion])
 
-  // Update model reference when model changes
+  // Calculate target rotation based on fly direction
+  useEffect(() => {
+    // Base rotation is -90 degrees (-PI/2) to face camera
+    const base = -Math.PI / 2
+    switch (flyDirection) {
+      case 'left':
+        targetBodyRotationY.current = base + (Math.PI / 4) // Face Left (+45deg relative to base)
+        break
+      case 'right':
+        targetBodyRotationY.current = base - (Math.PI / 4) // Face Right (-45deg relative to base)
+        break
+      case 'center':
+      default:
+        targetBodyRotationY.current = base
+    }
+  }, [flyDirection])
+
+  // Redundant copy removed - primitive object={model} already handles the model reference
+  // We only need to ensure the ref is assigned for rotation manipulation
   useEffect(() => {
     if (modelRef.current && model) {
-      // Copy the model's transform to our ref
-      modelRef.current.copy(model)
+      // Ensure initial rotation is set correctly if mounting fresh
+      modelRef.current.rotation.order = 'XYZ'
     }
   }, [model])
 
   // Animation loop for head movement and breathing
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!modelRef.current) return
 
     const targets = expressionTargetsRef.current
@@ -53,21 +109,23 @@ export function NurseModel({ model, emotion, isTalking, headOrientation, viewpor
     const desiredTurn = targets.turn + headOrientation.turn
     const desiredTilt = targets.tilt + headOrientation.tilt
 
-    // Base rotation: -90 degrees to face forward, plus dynamic turn
-    const baseRotationY = -Math.PI / 2
-    const targetY = baseRotationY + desiredTurn
+    // Smoothly rotate body to target direction (flyDirection)
+    // We blend the "Body Turn" with the "Head Turn" (which acts as a modifier)
+    // Note: headOrientation.turn is usually small (-0.5 to 0.5).
+    // We apply the body rotation primarily.
 
-    // Smooth interpolation to target rotation
-    modelRef.current.rotation.y = THREE.MathUtils.lerp(
+    modelRef.current.rotation.y = THREE.MathUtils.damp(
       modelRef.current.rotation.y,
-      targetY,
-      0.08
+      targetBodyRotationY.current + desiredTurn,
+      4, // Smoothness speed
+      delta
     )
-    
-    modelRef.current.rotation.x = THREE.MathUtils.lerp(
+
+    modelRef.current.rotation.x = THREE.MathUtils.damp(
       modelRef.current.rotation.x,
-      desiredTilt,
-      0.08
+      desiredTilt, // Head tilt affects whole body pitch slightly
+      4,
+      delta
     )
 
     // Breathing/idle animation (bob effect)

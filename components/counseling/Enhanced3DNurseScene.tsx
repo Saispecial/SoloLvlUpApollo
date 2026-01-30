@@ -10,8 +10,8 @@ import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor'
 import { StatusDisplay, EmotionIndicator } from './VisualFeedbackSystem'
 import NurseScene from './NurseScene' // Fallback component
 
-export type EmotionType = 'neutral' | 'happy' | 'sad' | 'thinking' | 'talking' | 
-                         'listening' | 'hi' | 'yes' | 'no' | 'rest'
+export type EmotionType = 'neutral' | 'happy' | 'sad' | 'thinking' | 'talking' |
+  'listening' | 'hi' | 'yes' | 'no' | 'rest'
 
 interface Enhanced3DNurseSceneProps {
   emotion?: EmotionType
@@ -45,7 +45,7 @@ export default function Enhanced3DNurseScene({
     progress: 0,
     stage: 'Initializing 3D environment...'
   })
-  
+
   const [errorState, setErrorState] = useState<ErrorState>({
     hasError: false,
     error: null,
@@ -54,34 +54,34 @@ export default function Enhanced3DNurseScene({
 
   const [use3D, setUse3D] = useState(true)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  
+
   // WebGL detection
   const { isWebGLSupported, webGLError } = useWebGLDetection()
-  
+
   // Performance monitoring
-  const { fps, isPerformanceGood } = usePerformanceMonitor(canvasRef)
-  
+  const { fps, isPerformanceGood } = usePerformanceMonitor(canvasRef as React.RefObject<HTMLCanvasElement>)
+
   // Responsive scaling based on viewport
   const [viewportScale, setViewportScale] = useState(1)
-  
+
   useEffect(() => {
     const updateScale = () => {
       const width = window.innerWidth
       const height = window.innerHeight
-      
+
       // Scale down on smaller screens
       if (width < 768) {
-        setViewportScale(0.8) // Mobile
+        setViewportScale(0.7) // Mobile
       } else if (width < 1024) {
         setViewportScale(0.9) // Tablet
       } else {
         setViewportScale(1.0) // Desktop
       }
     }
-    
+
     updateScale()
     window.addEventListener('resize', updateScale)
-    
+
     return () => window.removeEventListener('resize', updateScale)
   }, [])
 
@@ -180,10 +180,10 @@ export default function Enhanced3DNurseScene({
             </button>
           </div>
         )}
-        
+
         {/* Fallback to 2D component */}
         <FallbackComponent emotion={emotion} isTalking={isTalking} />
-        
+
         {/* WebGL not supported message */}
         {!isWebGLSupported && (
           <div className="absolute bottom-4 left-4 bg-amber-500/20 border border-amber-500/50 rounded-lg px-3 py-2">
@@ -238,24 +238,42 @@ export default function Enhanced3DNurseScene({
         </div>
       )}
 
-      {/* 3D Canvas */}
+      {/* 3D Canvas - OPTIMIZED FOR PERFORMANCE WITH MORE RESOURCES */}
       <Canvas
         ref={canvasRef}
-        camera={{ 
-          position: [0, 1.4, 3], 
+        camera={{
+          position: [0, 1.4, 3],
           fov: 50,
           near: 0.1,
           far: 100
         }}
-        gl={{ 
-          antialias: true, 
+        gl={{
+          antialias: window.devicePixelRatio <= 2, // Enable AA on more devices
           alpha: true,
-          powerPreference: "high-performance"
+          preserveDrawingBuffer: false,
+          powerPreference: "high-performance",
+          stencil: false, // Disable stencil buffer for better performance
+          depth: true,
+          precision: 'highp', // High precision for smoother rendering
+          logarithmicDepthBuffer: false
         }}
+        dpr={[1, 2]} // Limit pixel ratio to max 2 for performance
+        frameloop="always" // Ensure continuous rendering
+        performance={{ min: 0.5 }} // Allow more resources for smooth animations
         className="w-full h-full"
         onCreated={({ gl, scene }) => {
+          // Optimize renderer settings
           gl.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-          scene.background = null // Ensure transparency
+          gl.autoClear = true
+          gl.setClearColor(0x000000, 0)
+          scene.background = null
+          
+          // Enable performance optimizations
+          gl.shadowMap.enabled = false // Disable shadows for better performance
+          gl.physicallyCorrectLights = false
+          
+          // Allocate more resources for smoother animations
+          gl.capabilities.maxTextures = 16
         }}
       >
         <Suspense fallback={null}>
@@ -271,13 +289,13 @@ export default function Enhanced3DNurseScene({
       </Canvas>
 
       {/* Visual Feedback Overlays */}
-      <StatusDisplay 
+      <StatusDisplay
         emotion={emotion}
         isTalking={isTalking}
         isLoading={loadingState.isLoading}
       />
-      
-      <EmotionIndicator 
+
+      <EmotionIndicator
         emotion={emotion}
         isTalking={isTalking}
       />

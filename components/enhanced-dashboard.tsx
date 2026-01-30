@@ -4,12 +4,13 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import type { PlayerProfile, Quest, Achievement } from "@/lib/types"
 import { MobileDashboard } from "./mobile-dashboard"
-import { Target, Brain, BookOpen, MessageSquare, BarChart3, ChevronRight, CheckCircle2, Flame, TrendingUp, Heart } from "lucide-react"
+import { Target, Brain, BookOpen, MessageSquare, BarChart3, ChevronRight, CheckCircle2, Flame, TrendingUp, Heart, Mic, MicOff, Volume2, VolumeX, Keyboard } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import Enhanced3DNurseScene from "@/components/counseling/Enhanced3DNurseScene"
 import { useTourStore } from "@/stores/tour-store"
 import { HelpCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface EnhancedDashboardProps {
   player: PlayerProfile
@@ -21,6 +22,192 @@ export function EnhancedDashboard({ player, quests, achievements }: EnhancedDash
   const [isMobile, setIsMobile] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { isTourActive, startTour } = useTourStore()
+  const [isTalking, setIsTalking] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
+  const [isListening, setIsListening] = useState(false)
+  const [showCommandInput, setShowCommandInput] = useState(false)
+  const [commandInput, setCommandInput] = useState("")
+  const { toast } = useToast()
+
+  // Voice Command Logic
+  const handleVoiceCommand = (command: string) => {
+    const lowerCmd = command.toLowerCase()
+    console.log("Voice Command Received:", lowerCmd)
+
+    // Helper to speak confirmation
+    const speakConfirmation = (text: string) => {
+      if (isMuted) return
+      const utterance = new SpeechSynthesisUtterance(text)
+      window.speechSynthesis?.speak(utterance)
+    }
+
+    let actionTaken = false
+    let responseText = ""
+
+    if (lowerCmd.includes("dashboard") || lowerCmd.includes("home")) {
+      responseText = "Opening Dashboard"
+      window.location.href = "/?tab=dashboard"
+      actionTaken = true
+    } else if (lowerCmd.includes("quest") || lowerCmd.includes("activity")) {
+      responseText = "Opening Quests"
+      window.location.href = "/?tab=quests"
+      actionTaken = true
+    } else if (lowerCmd.includes("assessment") || lowerCmd.includes("test")) {
+      responseText = "Opening Assessment Center"
+      window.location.href = "/assessment"
+      actionTaken = true
+    } else if (lowerCmd.includes("journal") || lowerCmd.includes("diary")) {
+      responseText = "Opening Journal"
+      window.location.href = "/?tab=diary"
+      actionTaken = true
+    } else if (lowerCmd.includes("counselor") || lowerCmd.includes("chat")) {
+      responseText = "Opening Counselor"
+      window.location.href = "/counselor"
+      actionTaken = true
+    } else if (lowerCmd.includes("stats") || lowerCmd.includes("progress")) {
+      responseText = "Opening Statistics"
+      window.location.href = "/?tab=stats"
+      actionTaken = true
+    } else if (lowerCmd.includes("achievements") || lowerCmd.includes("awards")) {
+      responseText = "Opening Achievements"
+      window.location.href = "/?tab=achievements"
+      actionTaken = true
+    } else if (lowerCmd.includes("settings") || lowerCmd.includes("config")) {
+      responseText = "Opening Settings"
+      window.location.href = "/?tab=settings"
+      actionTaken = true
+    }
+
+    if (actionTaken) {
+      speakConfirmation(responseText)
+      toast({
+        title: "Voice Command Recognized",
+        description: `"${command}" → ${responseText}`,
+        variant: "default",
+      })
+    } else {
+      speakConfirmation("I didn't catch that command.")
+      toast({
+        title: "Command Not Understood",
+        description: `Heard: "${command}". Try "Open Dashboard" or "Open Quests".`,
+        variant: "destructive",
+      })
+    }
+  }
+
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("Speech recognition is not supported in this browser.")
+      return
+    }
+
+    // @ts-ignore - SpeechRecognition types might be missing
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    const recognition = new SpeechRecognition()
+
+    recognition.continuous = false
+    recognition.interimResults = false
+    recognition.lang = 'en-US'
+
+    recognition.onstart = () => {
+      setIsListening(true)
+      toast({
+        title: "Listening...",
+        description: "Speak a command now.",
+      })
+    }
+
+    recognition.onend = () => {
+      setIsListening(false)
+    }
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript
+      handleVoiceCommand(transcript)
+    }
+
+    recognition.onerror = (event: any) => {
+      console.warn("Speech Recognition Error:", event.error)
+      setIsListening(false)
+
+      if (event.error === 'no-speech') {
+        // Just timeout, no need to alert user aggressively
+        return
+      }
+
+      if (event.error === 'not-allowed') {
+        toast({
+          title: "Microphone Access Denied",
+          description: "Please allow microphone access to use voice commands.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Microphone Error",
+          description: "Could not hear you. Please try again.",
+          variant: "destructive",
+        })
+      }
+    }
+
+    recognition.start()
+  }
+
+  const toggleMute = () => {
+    if (isMuted) {
+      setIsMuted(false)
+      // Optional: Speak confirmation
+    } else {
+      setIsMuted(true)
+      window.speechSynthesis?.cancel()
+      setIsTalking(false)
+    }
+  }
+
+  // Import dialogues (lazy inline or top level, assuming import added)
+  // We need to add the import statement at the top, but since I can't do multiple chunks easily without risk, 
+  // I will assume I'll add the import in a separate step or use a require if needed, 
+  // but better to added the logic here and then add the import.
+  // Actually, I can add the logic and the import in one go if I include the top of the file, 
+  // but that's a huge replacement.
+  // I'll add the logic inside the component first.
+
+  useEffect(() => {
+    // Only speak on dashboard mount if tour is NOT active
+    if (isTourActive) return;
+
+    const speakRandomDialogue = async () => {
+      // Dynamic import to avoid top-level dependency issues if any
+      const { DASHBOARD_DIALOGUES } = await import("@/lib/constants/dashboard-dialogues")
+      const randomMsg = DASHBOARD_DIALOGUES[Math.floor(Math.random() * DASHBOARD_DIALOGUES.length)]
+
+      const utterance = new SpeechSynthesisUtterance(randomMsg)
+      const voices = window.speechSynthesis?.getVoices() || []
+      const femaleVoice = voices.find(v =>
+        v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Google US English')
+      )
+
+      if (femaleVoice) utterance.voice = femaleVoice
+      utterance.rate = 1.0
+      utterance.pitch = 1.1
+
+      utterance.onstart = () => setIsTalking(true)
+      utterance.onend = () => setIsTalking(false)
+      utterance.onerror = () => setIsTalking(false)
+
+      // Small delay to ensure interaction/loading
+      setTimeout(() => {
+        window.speechSynthesis?.speak(utterance)
+      }, 1000)
+    }
+
+    // Only run once on mount
+    speakRandomDialogue()
+
+    return () => {
+      window.speechSynthesis?.cancel()
+    }
+  }, [isTourActive])
 
   useEffect(() => {
     const checkMobile = () => {
@@ -84,22 +271,22 @@ export function EnhancedDashboard({ player, quests, achievements }: EnhancedDash
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-4">
-             <div className="bg-white/10 rounded-xl p-3 flex items-center gap-3">
-               <CheckCircle2 className="w-5 h-5 text-white/80" />
-               <div>
-                 <p className="text-lg font-bold text-white leading-none">{completedQuests.length}</p>
-                 <p className="text-white/70 text-xs">Completed Quests</p>
-               </div>
-             </div>
-             <div className="bg-white/10 rounded-xl p-3 flex items-center gap-3">
-               <Flame className="w-5 h-5 text-white/80" />
-               <div>
-                 <p className="text-lg font-bold text-white leading-none">{player.streak}</p>
-                 <p className="text-white/70 text-xs">Day Streak</p>
-               </div>
-             </div>
+            <div className="bg-white/10 rounded-xl p-3 flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-white/80" />
+              <div>
+                <p className="text-lg font-bold text-white leading-none">{completedQuests.length}</p>
+                <p className="text-white/70 text-xs">Completed Quests</p>
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-xl p-3 flex items-center gap-3">
+              <Flame className="w-5 h-5 text-white/80" />
+              <div>
+                <p className="text-lg font-bold text-white leading-none">{player.streak}</p>
+                <p className="text-white/70 text-xs">Day Streak</p>
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -122,7 +309,7 @@ export function EnhancedDashboard({ player, quests, achievements }: EnhancedDash
             <HelpCircle className="w-3.5 h-3.5" />
             Need Tutorial?
           </Button>
-          
+
           {/* Tutorial Button */}
           <Button
             variant="ghost"
@@ -134,9 +321,86 @@ export function EnhancedDashboard({ player, quests, achievements }: EnhancedDash
             Need Tutorial?
           </Button>
 
+          {/* Mute Toggle Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`absolute top-16 right-4 z-10 backdrop-blur-sm border shadow-sm transition-all hover:scale-105 ${isMuted
+              ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+              : "bg-white/80 text-teal-700 border-teal-100 hover:bg-white"
+              }`}
+            onClick={toggleMute}
+            title={isMuted ? "Unmute Bot" : "Mute Bot"}
+          >
+            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          </Button>
+
+          {/* Voice Command Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`absolute top-28 right-4 z-10 backdrop-blur-sm border shadow-sm transition-all hover:scale-105 ${isListening
+              ? "bg-red-500 text-white border-red-600 animate-pulse hover:bg-red-600"
+              : "bg-white/80 text-teal-700 border-teal-100 hover:bg-white"
+              }`}
+            onClick={startListening}
+            title="Voice Commands"
+          >
+            {isListening ? <div className="animate-pulse"><Mic className="w-5 h-5" /></div> : <Mic className="w-5 h-5" />}
+          </Button>
+
+          {/* Text Command Button (Fallback) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`absolute top-40 right-4 z-10 backdrop-blur-sm border shadow-sm transition-all hover:scale-105 ${showCommandInput
+                ? "bg-teal-600 text-white border-teal-700 hover:bg-teal-700"
+                : "bg-white/80 text-teal-700 border-teal-100 hover:bg-white"
+              }`}
+            onClick={() => setShowCommandInput(!showCommandInput)}
+            title="Type Command"
+          >
+            <Keyboard className="w-5 h-5" />
+          </Button>
+
+          {/* Text Command Input Field */}
+          {showCommandInput && (
+            <motion.form
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="absolute top-40 right-16 z-20 w-64"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (commandInput.trim()) {
+                  handleVoiceCommand(commandInput)
+                  setCommandInput("")
+                  setShowCommandInput(false)
+                }
+              }}
+            >
+              <div className="flex gap-2 p-2 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-teal-100">
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Type 'Open Quests'..."
+                  className="flex-1 bg-transparent border-none text-sm focus:outline-none text-foreground placeholder:text-muted-foreground"
+                  value={commandInput}
+                  onChange={(e) => setCommandInput(e.target.value)}
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="h-7 px-2 bg-teal-600 text-white hover:bg-teal-700"
+                >
+                  Go
+                </Button>
+              </div>
+            </motion.form>
+          )}
+
           <div className="flex-1 w-full relative min-h-[400px]">
             <div className={`w-full h-full transition-opacity duration-300 ${isTourActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-              {!isTourActive && <Enhanced3DNurseScene emotion="neutral" isTalking={false} />}
+              {!isTourActive && <Enhanced3DNurseScene emotion={isTalking ? "talking" : "neutral"} isTalking={isTalking} />}
             </div>
           </div>
         </motion.div>
@@ -149,28 +413,28 @@ export function EnhancedDashboard({ player, quests, achievements }: EnhancedDash
           transition={{ delay: 0.3 }}
         >
           <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex-1 flex flex-col justify-center items-center text-center">
-             <Target className="w-10 h-10 text-teal-600 mb-3 bg-teal-50 p-2 rounded-full" />
-             <h3 className="font-semibold text-gray-900 mb-1">Active Quests</h3>
-             <p className="text-3xl font-bold text-teal-600 mb-2">{activeQuests.length}</p>
-             <Button 
-               variant="outline" 
-               className="w-full mt-auto"
-               onClick={() => (window.location.href = "/?tab=quests")}
-             >
-               View Details
-             </Button>
+            <Target className="w-10 h-10 text-teal-600 mb-3 bg-teal-50 p-2 rounded-full" />
+            <h3 className="font-semibold text-gray-900 mb-1">Active Quests</h3>
+            <p className="text-3xl font-bold text-teal-600 mb-2">{activeQuests.length}</p>
+            <Button
+              variant="outline"
+              className="w-full mt-auto"
+              onClick={() => (window.location.href = "/?tab=quests")}
+            >
+              View Details
+            </Button>
           </div>
-          
+
           <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex-1 flex flex-col justify-center items-center text-center">
-             <MessageSquare className="w-10 h-10 text-purple-600 mb-3 bg-purple-50 p-2 rounded-full" />
-             <h3 className="font-semibold text-gray-900 mb-1">AI Counselor</h3>
-             <p className="text-sm text-gray-500 mb-4">Talk through your day</p>
-             <Button 
-               className="w-full mt-auto bg-purple-600 hover:bg-purple-700"
-               onClick={() => (window.location.href = "/counselor")}
-             >
-               Start Session
-             </Button>
+            <MessageSquare className="w-10 h-10 text-purple-600 mb-3 bg-purple-50 p-2 rounded-full" />
+            <h3 className="font-semibold text-gray-900 mb-1">AI Counselor</h3>
+            <p className="text-sm text-gray-500 mb-4">Talk through your day</p>
+            <Button
+              className="w-full mt-auto bg-purple-600 hover:bg-purple-700"
+              onClick={() => (window.location.href = "/counselor")}
+            >
+              Start Session
+            </Button>
           </div>
         </motion.div>
       </div>

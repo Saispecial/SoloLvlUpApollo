@@ -141,24 +141,25 @@ export default function NurseScene({ emotion = "neutral", isTalking = false }: N
       }
     )
 
-    // Animation loop
+    // Animation loop - OPTIMIZED FOR SMOOTH PERFORMANCE
     const animate = () => {
       requestAnimationFrame(animate)
 
-      const delta = clockRef.current.getDelta()
+      // Cap delta time to prevent large jumps
+      const delta = Math.min(clockRef.current.getDelta(), 0.1)
 
       if (mixerRef.current) mixerRef.current.update(delta)
       if (externalMixerRef.current) externalMixerRef.current.update(delta)
       if (controlsRef.current) controlsRef.current.update()
 
-      // Gentle bobbing animation
+      // Gentle bobbing animation - only when no external animation
       if (modelRef.current && !externalModelRef.current) {
         const elapsed = clockRef.current.elapsedTime
         const bobOffset = Math.sin(elapsed * 2.2) * 0.02
         modelRef.current.position.y = 0.9 + bobOffset
       }
 
-      // Talking light pulse
+      // Talking light pulse - optimized
       if (isTalking && emotionLightRef.current) {
         const pulse = Math.sin(clockRef.current.elapsedTime * 8) * 0.5 + 0.5
         emotionLightRef.current.intensity = 1.5 + pulse * 2.5
@@ -192,13 +193,13 @@ export default function NurseScene({ emotion = "neutral", isTalking = false }: N
     }
   }, [])
 
-  // Play external animation
+  // Play external animation - OPTIMIZED TO PREVENT OVERLAPPING
   const playExternalAnimation = (key: string, fallbackEmotion = 'neutral') => {
     if (!sceneRef.current) return
 
     console.log(`Loading ${key}.glb animation`)
 
-    // Cancel pending cleanup
+    // CRITICAL: Cancel any pending cleanup immediately
     if (cleanupTimerRef.current) {
       clearTimeout(cleanupTimerRef.current)
       cleanupTimerRef.current = null
@@ -206,6 +207,7 @@ export default function NurseScene({ emotion = "neutral", isTalking = false }: N
 
     const oldExternalModel = externalModelRef.current
 
+    // CRITICAL: Stop all external animations immediately to prevent overlap
     if (externalMixerRef.current) {
       externalMixerRef.current.stopAllAction()
       externalMixerRef.current = null
@@ -215,7 +217,7 @@ export default function NurseScene({ emotion = "neutral", isTalking = false }: N
 
     const loader = new GLTFLoader()
 
-    // Check cache first
+    // Check cache first for faster loading
     if (modelCacheRef.current.has(key)) {
       console.log(`Loading ${key} from cache`)
       const cached = modelCacheRef.current.get(key)!
@@ -238,19 +240,21 @@ export default function NurseScene({ emotion = "neutral", isTalking = false }: N
     )
 
     function onLoadSuccess(loadedScene: THREE.Object3D, loadedAnimations: THREE.AnimationClip[]) {
-      externalModelRef.current = loadedScene
-
-      // Remove old model
+      // CRITICAL: Remove old model BEFORE adding new one
       if (oldExternalModel && sceneRef.current) {
         sceneRef.current.remove(oldExternalModel)
       }
 
-      // Make meshes visible
+      externalModelRef.current = loadedScene
+
+      // Optimize meshes for performance
       loadedScene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           const mesh = child as THREE.Mesh
           mesh.visible = true
-          mesh.frustumCulled = false
+          mesh.frustumCulled = true // Enable frustum culling
+          mesh.castShadow = false
+          mesh.receiveShadow = false
         }
       })
 
@@ -262,7 +266,7 @@ export default function NurseScene({ emotion = "neutral", isTalking = false }: N
 
       sceneRef.current!.add(loadedScene)
 
-      // Hide main model
+      // Hide main model to prevent overlap
       if (modelRef.current) {
         modelRef.current.visible = false
       }
@@ -272,7 +276,7 @@ export default function NurseScene({ emotion = "neutral", isTalking = false }: N
         externalMixerRef.current = mixer
 
         loadedAnimations.forEach((clip) => {
-          // Remove root motion
+          // Remove root motion to prevent unwanted movement
           clip.tracks = clip.tracks.filter(track => {
             const isPosition = track.name.endsWith('.position')
             const isRotation = track.name.endsWith('.quaternion')
@@ -284,20 +288,23 @@ export default function NurseScene({ emotion = "neutral", isTalking = false }: N
             return true
           })
 
+          // Optimize clip
+          clip.optimize()
+
           const action = mixer.clipAction(clip)
           action.reset()
           action.clampWhenFinished = true
           action.setLoop(THREE.LoopOnce, 1)
-          action.timeScale = 1.0
-          action.fadeIn(0.3)
+          action.timeScale = 0.95 // Slightly slower for smoother appearance
+          action.fadeIn(0.4) // INCREASED fade-in for smoother start
           action.play()
         })
 
-        // Cleanup after animation
+        // Cleanup after animation with INCREASED buffer time
         const animationDuration = loadedAnimations[0].duration * 1000
         cleanupTimerRef.current = setTimeout(() => {
           cleanup(key)
-        }, animationDuration + 100)
+        }, animationDuration + 500) // INCREASED buffer from 300ms to 500ms
       } else {
         setTimeout(() => cleanup(key), 3000)
       }
@@ -318,7 +325,7 @@ export default function NurseScene({ emotion = "neutral", isTalking = false }: N
 
       cleanupTimerRef.current = null
 
-      // Show main model
+      // Show main model with smooth transition
       if (modelRef.current) {
         modelRef.current.visible = true
       }

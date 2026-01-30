@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { SkeletonUtils } from 'three-stdlib'
 
 interface ModelLoadResult {
   model: THREE.Object3D | null
@@ -29,7 +30,7 @@ export function useThreeJSModel(modelUrl?: string): ModelLoadResult {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [progress, setProgress] = useState(0)
-  
+
   const loaderRef = useRef<GLTFLoader | null>(null)
   const dracoLoaderRef = useRef<DRACOLoader | null>(null)
 
@@ -39,17 +40,17 @@ export function useThreeJSModel(modelUrl?: string): ModelLoadResult {
       // Initialize DRACO loader for compressed models (optional)
       dracoLoaderRef.current = new DRACOLoader()
       dracoLoaderRef.current.setDecoderPath('/draco/')
-      
+
       // Initialize GLTF loader
       loaderRef.current = new GLTFLoader()
-      
+
       // Set DRACO loader if available
       if (dracoLoaderRef.current) {
         loaderRef.current.setDRACOLoader(dracoLoaderRef.current)
       }
     } catch (error) {
       console.warn('Failed to initialize DRACO loader, continuing without compression support:', error)
-      
+
       // Fallback to basic GLTF loader
       loaderRef.current = new GLTFLoader()
     }
@@ -107,17 +108,17 @@ export function useThreeJSModel(modelUrl?: string): ModelLoadResult {
       const cached = modelCache.get(url)
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
         console.log('Loading model from cache:', url)
-        
+
         // Clone the cached scene to avoid modifying the original
         const clonedScene = cached.scene.clone()
-        
+
         setModel(clonedScene)
         setAnimations(cached.animations)
-        
+
         // Create new mixer for the cloned model
         const newMixer = new THREE.AnimationMixer(clonedScene)
         setMixer(newMixer)
-        
+
         setProgress(100)
         setIsLoading(false)
         return
@@ -125,7 +126,7 @@ export function useThreeJSModel(modelUrl?: string): ModelLoadResult {
 
       // Load model from network
       console.log('Loading model from network:', url)
-      
+
       const gltf = await new Promise<any>((resolve, reject) => {
         loaderRef.current!.load(
           url,
@@ -145,7 +146,7 @@ export function useThreeJSModel(modelUrl?: string): ModelLoadResult {
       const loadedAnimations = gltf.animations || []
 
       // Optimize model materials and geometry
-      loadedScene.traverse((child) => {
+      loadedScene.traverse((child: THREE.Object3D) => {
         if (child instanceof THREE.Mesh) {
           // Ensure materials are visible
           if (child.material) {
@@ -174,18 +175,21 @@ export function useThreeJSModel(modelUrl?: string): ModelLoadResult {
       loadedScene.position.set(0, 0.9, 0)
       loadedScene.updateMatrixWorld(true)
 
-      // Cache the model
+      // Cache the model (original)
+      // Use SkeletonUtils to clone properly (handles bones/skinning)
+      const cachedClone = SkeletonUtils.clone(loadedScene)
       modelCache.set(url, {
-        scene: loadedScene.clone(), // Store a clone in cache
+        scene: cachedClone,
         animations: loadedAnimations,
         timestamp: Date.now()
       })
 
-      // Create animation mixer
-      const newMixer = new THREE.AnimationMixer(loadedScene)
+      // Use a fresh clone for this instance
+      const sceneClone = SkeletonUtils.clone(loadedScene)
+      const newMixer = new THREE.AnimationMixer(sceneClone)
 
       // Set state
-      setModel(loadedScene)
+      setModel(sceneClone)
       setAnimations(loadedAnimations)
       setMixer(newMixer)
       setProgress(100)
@@ -193,7 +197,7 @@ export function useThreeJSModel(modelUrl?: string): ModelLoadResult {
 
       console.log('Model loaded successfully:', {
         animations: loadedAnimations.length,
-        meshes: loadedScene.children.length
+        meshes: sceneClone.children.length
       })
 
     } catch (err) {
