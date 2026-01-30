@@ -1,0 +1,19 @@
+# Ignore duplicate 3D model folders to reduce deployment size
+animation/
+nurce ui/
+
+# Ignore documentation files (not needed for production)
+*.md
+!README.md
+
+# Ignore development files
+.env.local
+.vscode/
+.git/
+
+# Ignore large files that aren't needed
+node_modules/
+.next/
+.vercel/
+
+# Keep only the public folder GLB files for production
