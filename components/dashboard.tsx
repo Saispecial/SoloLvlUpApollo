@@ -507,7 +507,6 @@ const DashboardContent = forwardRef(function DashboardContent(props, ref) {
             <SettingsPage
               player={player}
               onUpdateName={updatePlayerName}
-              onThemeChange={updateTheme}
               onReset={resetPlayer}
             />
           </motion.div>

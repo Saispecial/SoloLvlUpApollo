@@ -3,28 +3,11 @@
 import type React from "react"
 import { useState } from "react"
 import {
-  Moon,
-  Zap,
-  Compass,
-  Flame,
-  Leaf,
-  Crown,
-  Sunrise,
-  Waves,
-  Sunset,
   Pencil,
   AlertTriangle,
-  Sun,
-  Sparkles,
-  TreePine,
-  Droplet,
   Calendar,
   Clock,
   Mic,
-  Palette,
-  Star,
-  Heart,
-  Zap as Lightning,
 } from "lucide-react"
 import { format } from "date-fns"
 import type { PlayerProfile, Theme } from "@/lib/types"
@@ -35,11 +18,10 @@ import { Label } from "@/components/ui/label"
 interface SettingsPageProps {
   player: PlayerProfile
   onUpdateName: (name: string) => void
-  onThemeChange: (theme: Theme) => void
   onReset: () => void
 }
 
-export function SettingsPage({ player, onUpdateName, onThemeChange, onReset }: SettingsPageProps) {
+export function SettingsPage({ player, onUpdateName, onReset }: SettingsPageProps) {
   const [name, setName] = useState(player.name)
   const [isEditingName, setIsEditingName] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
@@ -55,27 +37,6 @@ export function SettingsPage({ player, onUpdateName, onThemeChange, onReset }: S
     }
   }
 
-  const themes = [
-    { id: "classic-dark", name: "Classic Dark", icon: Moon, description: "Minimalist black-gray theme" },
-    { id: "cyberpunk-neon", name: "Cyberpunk Neon", icon: Zap, description: "Dark with neon purple highlights" },
-    { id: "deep-space", name: "Deep Space", icon: Compass, description: "Galaxy-inspired gradients" },
-    { id: "inferno-red", name: "Inferno Red", icon: Flame, description: "Dark with fiery red tones" },
-    { id: "emerald-forest", name: "Emerald Forest", icon: Leaf, description: "Rich green forest theme" },
-    { id: "royal-purple", name: "Royal Purple", icon: Crown, description: "Elegant purple royalty theme" },
-    { id: "crimson-dawn", name: "Crimson Dawn", icon: Sunrise, description: "Deep crimson highlights" },
-    { id: "ocean-breeze", name: "Ocean Breeze", icon: Waves, description: "Calming cyan sea theme" },
-    { id: "sunset-orange", name: "Sunset Orange", icon: Sunset, description: "Warm orange sunset colors" },
-    { id: "golden-dawn", name: "Golden Dawn", icon: Sun, description: "Radiant yellow sunrise theme" },
-    { id: "neon-yellow", name: "Neon Yellow", icon: Sparkles, description: "Vibrant electric yellow glow" },
-    { id: "dark-forest", name: "Dark Forest", icon: TreePine, description: "Deep emerald forest theme" },
-    { id: "deep-cyan", name: "Deep Cyan", icon: Droplet, description: "Rich dark cyan waters" },
-    { id: "aurora-borealis", name: "Aurora Borealis", icon: Star, description: "Northern lights green glow" },
-    { id: "midnight-storm", name: "Midnight Storm", icon: Lightning, description: "Dark stormy indigo theme" },
-    { id: "cosmic-purple", name: "Cosmic Purple", icon: Palette, description: "Deep space purple theme" },
-    { id: "neon-pink", name: "Neon Pink", icon: Heart, description: "Vibrant pink neon theme" },
-    { id: "golden-sunset", name: "Golden Sunset", icon: Sunset, description: "Warm golden sunset theme" },
-  ] as const
-
   const handleReset = () => {
     onReset()
     setShowResetConfirm(false)
@@ -85,7 +46,7 @@ export function SettingsPage({ player, onUpdateName, onThemeChange, onReset }: S
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-bold mb-2 text-themed-text">Settings</h1>
-        <p className="text-themed-text opacity-60">Customize your hunter profile and appearance</p>
+        <p className="text-themed-text opacity-60">Customize your nurse profile and preferences</p>
       </header>
 
       <section className="space-y-4">
@@ -93,7 +54,7 @@ export function SettingsPage({ player, onUpdateName, onThemeChange, onReset }: S
         <div className="card-themed p-6">
           <div className="space-y-4">
             <div>
-              <Label className="block text-sm font-medium text-themed-text opacity-80 mb-1">Hunter Name</Label>
+              <Label className="block text-sm font-medium text-themed-text opacity-80 mb-1">Nurse's Name</Label>
               <div className="flex items-center gap-2">
                 {isEditingName ? (
                   <form onSubmit={handleNameSubmit} className="flex-1 flex gap-2">
@@ -102,7 +63,7 @@ export function SettingsPage({ player, onUpdateName, onThemeChange, onReset }: S
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="input-themed flex-1"
-                      placeholder="Enter your hunter name"
+                      placeholder="Enter your nurse name"
                       autoFocus
                     />
                     <Button type="submit" className="btn-primary">
@@ -191,27 +152,6 @@ export function SettingsPage({ player, onUpdateName, onThemeChange, onReset }: S
               </ul>
             </div>
           )}
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-themed-text">Theme Selection</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {themes.map(({ id, name: themeName, icon: Icon, description }) => (
-            <button
-              key={id}
-              onClick={() => onThemeChange(id as Theme)}
-              className={`theme-selector p-6 rounded-lg text-left transition-all duration-200 ${
-                player.theme === id ? "selected" : ""
-              }`}
-            >
-              <div className="flex items-center gap-3 mb-2 w-full">
-                <Icon className={`w-6 h-6 ${player.theme === id ? "text-themed-primary" : "text-themed-accent"}`} />
-                <span className="font-medium text-themed-text">{themeName}</span>
-              </div>
-              <p className="text-sm text-themed-text opacity-60">{description}</p>
-            </button>
-          ))}
         </div>
       </section>
 
